@@ -19,10 +19,11 @@ interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   createUser: (user: User, username?: string) => Promise<void>;
-  signIn: (emailOrUsername: string, password: string) => Promise<void>;
+  signIn: (emailOrUsername: string, password: string, rememberMe?: boolean) => Promise<void>;
   signUp: (email: string, password: string, username: string) => Promise<void>;
   signInWithMagicLink: (email: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (data: { name?: string; username?: string }) => Promise<void>;
@@ -37,6 +38,7 @@ export const AuthContext = createContext<AuthContextType>({
   signUp: async () => {},
   signInWithMagicLink: async () => {},
   signInWithGoogle: async () => {},
+  signInWithApple: async () => {},
   signOut: async () => {},
   resetPassword: async () => {},
   updateProfile: async () => {},
@@ -129,7 +131,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const signIn = async (emailOrUsername: string, password: string) => {
+  const signIn = async (emailOrUsername: string, password: string, rememberMe: boolean = false) => {
+    // Configure session persistence based on rememberMe
+    if (rememberMe) {
+      // Set session to persist in localStorage (stays logged in)
+      await supabase.auth.setSession({
+        access_token: '',
+        refresh_token: ''
+      });
+    }
+
     // First try to sign in with email
     let { data, error } = await supabase.auth.signInWithPassword({ 
       email: emailOrUsername, 
@@ -163,6 +174,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     if (!error && data.user) {
       await createUser(data.user);
+      
+      // Store remember me preference
+      if (rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
+      } else {
+        localStorage.removeItem('rememberMe');
+      }
     }
     
     if (error) {
@@ -234,6 +252,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google' as Provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+    
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+      throw error;
+    }
+  };
+
+  const signInWithApple = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple' as Provider,
       options: {
         redirectTo: `${window.location.origin}/auth/callback`
       }
@@ -327,6 +363,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       signUp,
       signInWithMagicLink,
       signInWithGoogle,
+      signInWithApple,
       signOut,
       resetPassword,
       updateProfile,

@@ -3,7 +3,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import * as Yup from 'yup';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaApple } from 'react-icons/fa';
 import GoogleButton from '@/components/GoogleButton';
 import Logo from '@/components/Logo';
 import { useToast } from "@/components/ui/use-toast";
@@ -12,13 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useIsIFrame } from '@/hooks/useIsIFrame';
 
 const LoginPage = () => {
   const router = useRouter();
-  const { initializing, signIn } = useContext(AuthContext);
+  const { initializing, signIn, signInWithApple } = useContext(AuthContext);
   const [showPw, setShowPw] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const { isIframe } = useIsIFrame();
   const { toast } = useToast();
 
@@ -27,7 +29,7 @@ const LoginPage = () => {
     setIsLoading(true);
     try {
       const { email, password } = formik.values;
-      await signIn(email, password);
+      await signIn(email, password, rememberMe);
       router.push('/dashboard');
     } catch (error) {
       console.error(error);
@@ -40,6 +42,19 @@ const LoginPage = () => {
       setIsLoading(false);
     }
   }
+
+  const handleAppleLogin = async () => {
+    try {
+      await signInWithApple();
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Apple login failed",
+        description: "Please try again.",
+      });
+    }
+  };
 
   const validationSchema = Yup.object().shape({
     email: Yup.string().required("Email or username is required"),
@@ -80,6 +95,14 @@ const LoginPage = () => {
             <CardContent className="space-y-4">
               <div className="flex flex-col gap-3">
                 <GoogleButton />
+                <Button
+                  onClick={handleAppleLogin}
+                  variant="outline"
+                  className="w-full bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                >
+                  <FaApple className="w-4 h-4 mr-2" />
+                  Continue with Apple
+                </Button>
                 <Button
                   onClick={(e) => {
                     e.preventDefault();
@@ -150,6 +173,17 @@ const LoginPage = () => {
                         {formik.touched.password && formik.errors.password && (
                           <p className="text-destructive text-xs">{formik.errors.password}</p>
                         )}
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="rememberMe"
+                          checked={rememberMe}
+                          onCheckedChange={setRememberMe}
+                        />
+                        <Label htmlFor="rememberMe" className="text-sm text-muted-foreground">
+                          Remember me
+                        </Label>
                       </div>
 
                       <div className="flex flex-col sm:flex-row justify-between gap-2 text-xs sm:text-sm">
