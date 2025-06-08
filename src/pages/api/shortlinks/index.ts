@@ -84,6 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               backgroundColor: '#FFFFFF',
               size: 200,
               format: 'PNG',
+              qrCodeData: qrCodeData,
               userId: user.id
             }
           });

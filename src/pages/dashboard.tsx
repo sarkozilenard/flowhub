@@ -148,9 +148,44 @@ export default function Dashboard() {
     }>
   });
 
+  // QR Code states
+  const [qrForm, setQrForm] = useState({
+    content: '',
+    title: '',
+    foregroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
+    size: '200',
+    format: 'PNG'
+  });
+  const [qrCodes, setQrCodes] = useState<any[]>([]);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [qrGenerating, setQrGenerating] = useState(false);
+
+  // Email states
+  const [emailForm, setEmailForm] = useState({
+    email: '',
+    provider: 'gmail',
+    username: '',
+    password: ''
+  });
+  const [emailAccounts, setEmailAccounts] = useState<any[]>([]);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+
+  // YouTube states
+  const [youtubeForm, setYoutubeForm] = useState({
+    url: '',
+    format: 'mp4',
+    quality: 'highest'
+  });
+  const [youtubeProcessing, setYoutubeProcessing] = useState(false);
+  const [youtubeResult, setYoutubeResult] = useState<any>(null);
+
   useEffect(() => {
     if (user) {
       fetchData();
+      fetchQrCodes();
+      fetchEmailAccounts();
     }
   }, [user]);
 
@@ -195,6 +230,179 @@ export default function Dashboard() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // QR Code functions
+  const fetchQrCodes = async () => {
+    try {
+      const response = await fetch('/api/qr');
+      if (response.ok) {
+        const data = await response.json();
+        setQrCodes(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch QR codes:', error);
+    }
+  };
+
+  const generateQrCode = async () => {
+    if (!qrForm.content.trim()) {
+      toast({
+        variant: "destructive",
+        title: t('message.error'),
+        description: "Please enter content for the QR code",
+      });
+      return;
+    }
+
+    setQrGenerating(true);
+    try {
+      const response = await fetch('/api/qr/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: qrForm.content,
+          title: qrForm.title,
+          foregroundColor: qrForm.foregroundColor,
+          backgroundColor: qrForm.backgroundColor,
+          size: parseInt(qrForm.size),
+          format: qrForm.format
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setQrCodes([data, ...qrCodes]);
+        setQrForm({
+          content: '',
+          title: '',
+          foregroundColor: '#000000',
+          backgroundColor: '#FFFFFF',
+          size: '200',
+          format: 'PNG'
+        });
+        setQrDialogOpen(false);
+        
+        toast({
+          title: t('message.success'),
+          description: "QR code generated successfully",
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate QR code');
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: t('message.error'),
+        description: error.message || "Failed to generate QR code",
+      });
+    } finally {
+      setQrGenerating(false);
+    }
+  };
+
+  // Email functions
+  const fetchEmailAccounts = async () => {
+    try {
+      const response = await fetch('/api/email/accounts');
+      if (response.ok) {
+        const data = await response.json();
+        setEmailAccounts(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch email accounts:', error);
+    }
+  };
+
+  const addEmailAccount = async () => {
+    if (!emailForm.email.trim()) {
+      toast({
+        variant: "destructive",
+        title: t('message.error'),
+        description: "Please enter an email address",
+      });
+      return;
+    }
+
+    setEmailLoading(true);
+    try {
+      const response = await fetch('/api/email/accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailForm)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEmailAccounts([data, ...emailAccounts]);
+        setEmailForm({
+          email: '',
+          provider: 'gmail',
+          username: '',
+          password: ''
+        });
+        setEmailDialogOpen(false);
+        
+        toast({
+          title: t('message.success'),
+          description: "Email account added successfully",
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add email account');
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: t('message.error'),
+        description: error.message || "Failed to add email account",
+      });
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  // YouTube functions
+  const processYouTubeVideo = async () => {
+    if (!youtubeForm.url.trim()) {
+      toast({
+        variant: "destructive",
+        title: t('message.error'),
+        description: "Please enter a YouTube URL",
+      });
+      return;
+    }
+
+    setYoutubeProcessing(true);
+    try {
+      const response = await fetch('/api/youtube/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(youtubeForm)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setYoutubeResult(data);
+        
+        toast({
+          title: t('message.success'),
+          description: "Video processed successfully",
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process video');
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: t('message.error'),
+        description: error.message || "Failed to process YouTube video",
+      });
+    } finally {
+      setYoutubeProcessing(false);
     }
   };
 
@@ -1306,7 +1514,7 @@ export default function Dashboard() {
             <TabsContent value="email" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Email Client</h2>
-                <Dialog>
+                <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="w-4 h-4 mr-2" />
@@ -1323,12 +1531,14 @@ export default function Dashboard() {
                         <Input
                           id="emailAddress"
                           type="email"
+                          value={emailForm.email}
+                          onChange={(e) => setEmailForm({...emailForm, email: e.target.value})}
                           placeholder="your.email@example.com"
                         />
                       </div>
                       <div>
                         <Label htmlFor="emailProvider">Provider</Label>
-                        <Select>
+                        <Select value={emailForm.provider} onValueChange={(value) => setEmailForm({...emailForm, provider: value})}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select email provider" />
                           </SelectTrigger>
@@ -1347,34 +1557,60 @@ export default function Dashboard() {
                           <li>• <strong>IMAP:</strong> Enter server settings manually</li>
                         </ul>
                       </div>
-                      <Button className="w-full">
-                        Add Account
+                      <Button 
+                        onClick={addEmailAccount} 
+                        className="w-full"
+                        disabled={emailLoading}
+                      >
+                        {emailLoading ? 'Adding...' : 'Add Account'}
                       </Button>
                     </div>
                   </DialogContent>
                 </Dialog>
               </div>
 
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No email accounts configured</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Add your first email account to start managing emails directly from FlowHub!
-                  </p>
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add First Email Account
-                  </Button>
-                </CardContent>
-              </Card>
+              {emailAccounts.length > 0 ? (
+                <div className="space-y-4">
+                  {emailAccounts.map((account) => (
+                    <Card key={account.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-medium">{account.email}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {account.provider} • {account._count?.emails || 0} emails
+                            </p>
+                          </div>
+                          <Badge variant={account.isActive ? "default" : "secondary"}>
+                            {account.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No email accounts configured</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Add your first email account to start managing emails directly from FlowHub!
+                    </p>
+                    <Button onClick={() => setEmailDialogOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add First Email Account
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* QR Codes Tab */}
             <TabsContent value="qr" className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">QR Code Generator</h2>
-                <Dialog>
+                <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="w-4 h-4 mr-2" />
@@ -1390,6 +1626,8 @@ export default function Dashboard() {
                         <Label htmlFor="qrContent">Content</Label>
                         <Textarea
                           id="qrContent"
+                          value={qrForm.content}
+                          onChange={(e) => setQrForm({...qrForm, content: e.target.value})}
                           placeholder="Enter URL, text, or any content..."
                           rows={3}
                         />
@@ -1398,6 +1636,8 @@ export default function Dashboard() {
                         <Label htmlFor="qrTitle">Title (optional)</Label>
                         <Input
                           id="qrTitle"
+                          value={qrForm.title}
+                          onChange={(e) => setQrForm({...qrForm, title: e.target.value})}
                           placeholder="QR Code title"
                         />
                       </div>
@@ -1407,7 +1647,8 @@ export default function Dashboard() {
                           <Input
                             id="qrForeground"
                             type="color"
-                            defaultValue="#000000"
+                            value={qrForm.foregroundColor}
+                            onChange={(e) => setQrForm({...qrForm, foregroundColor: e.target.value})}
                           />
                         </div>
                         <div>
@@ -1415,14 +1656,15 @@ export default function Dashboard() {
                           <Input
                             id="qrBackground"
                             type="color"
-                            defaultValue="#FFFFFF"
+                            value={qrForm.backgroundColor}
+                            onChange={(e) => setQrForm({...qrForm, backgroundColor: e.target.value})}
                           />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="qrSize">Size</Label>
-                          <Select defaultValue="200">
+                          <Select value={qrForm.size} onValueChange={(value) => setQrForm({...qrForm, size: value})}>
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
@@ -1436,7 +1678,7 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <Label htmlFor="qrFormat">Format</Label>
-                          <Select defaultValue="PNG">
+                          <Select value={qrForm.format} onValueChange={(value) => setQrForm({...qrForm, format: value})}>
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
@@ -1447,31 +1689,64 @@ export default function Dashboard() {
                           </Select>
                         </div>
                       </div>
-                      <Button className="w-full">
-                        Generate QR Code
+                      <Button 
+                        onClick={generateQrCode} 
+                        className="w-full"
+                        disabled={qrGenerating}
+                      >
+                        {qrGenerating ? 'Generating...' : 'Generate QR Code'}
                       </Button>
                     </div>
                   </DialogContent>
                 </Dialog>
               </div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4">
-                      <div className="w-8 h-8 bg-foreground rounded-sm"></div>
-                    </div>
-                    <h3 className="text-lg font-medium mb-2">No QR codes yet</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Generate your first QR code for links, text, or any content!
-                    </p>
-                    <Button>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Generate First QR Code
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
+              {qrCodes.length > 0 ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {qrCodes.map((qr) => (
+                    <Card key={qr.id}>
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-center bg-muted p-4 rounded">
+                            {qr.qrCodeData && (
+                              qr.format.toLowerCase() === 'svg' ? (
+                                <div dangerouslySetInnerHTML={{ __html: qr.qrCodeData }} />
+                              ) : (
+                                <img src={qr.qrCodeData} alt="QR Code" className="max-w-full h-auto" />
+                              )
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-medium">{qr.title || 'QR Code'}</h3>
+                            <p className="text-sm text-muted-foreground truncate">{qr.content}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {qr.size}x{qr.size} • {qr.format}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4">
+                        <div className="w-8 h-8 bg-foreground rounded-sm"></div>
+                      </div>
+                      <h3 className="text-lg font-medium mb-2">No QR codes yet</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Generate your first QR code for links, text, or any content!
+                      </p>
+                      <Button onClick={() => setQrDialogOpen(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Generate First QR Code
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
               <Card>
                 <CardHeader>
@@ -1526,6 +1801,8 @@ export default function Dashboard() {
                     <Label htmlFor="youtubeUrl">YouTube URL</Label>
                     <Input
                       id="youtubeUrl"
+                      value={youtubeForm.url}
+                      onChange={(e) => setYoutubeForm({...youtubeForm, url: e.target.value})}
                       placeholder="https://www.youtube.com/watch?v=..."
                     />
                     <p className="text-xs text-muted-foreground mt-1">
@@ -1536,7 +1813,7 @@ export default function Dashboard() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="downloadFormat">Format</Label>
-                      <Select defaultValue="mp4">
+                      <Select value={youtubeForm.format} onValueChange={(value) => setYoutubeForm({...youtubeForm, format: value})}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -1548,7 +1825,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <Label htmlFor="downloadQuality">Quality</Label>
-                      <Select defaultValue="highest">
+                      <Select value={youtubeForm.quality} onValueChange={(value) => setYoutubeForm({...youtubeForm, quality: value})}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -1563,9 +1840,22 @@ export default function Dashboard() {
                     </div>
                   </div>
                   
-                  <Button className="w-full">
-                    <Download className="w-4 h-4 mr-2" />
-                    Process Video
+                  <Button 
+                    onClick={processYouTubeVideo} 
+                    className="w-full"
+                    disabled={youtubeProcessing}
+                  >
+                    {youtubeProcessing ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4 mr-2" />
+                        Process Video
+                      </>
+                    )}
                   </Button>
                   
                   <div className="p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
@@ -1573,12 +1863,38 @@ export default function Dashboard() {
                     <ul className="text-sm space-y-1 text-yellow-700 dark:text-yellow-300">
                       <li>• Only download content you have permission to use</li>
                       <li>• Respect copyright laws and YouTube's Terms of Service</li>
-                      <li>• This tool is for personal use and educational purposes</li>
                       <li>• Large files may take time to process</li>
+                      <li>• This tool is for personal use and educational purposes</li>
                     </ul>
                   </div>
                 </CardContent>
               </Card>
+
+              {youtubeResult && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Processing Result</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="font-medium">{youtubeResult.title}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Duration: {youtubeResult.duration} • Format: {youtubeResult.format}
+                        </p>
+                      </div>
+                      {youtubeResult.downloadUrl && (
+                        <Button asChild className="w-full">
+                          <a href={youtubeResult.downloadUrl} download>
+                            <Download className="w-4 h-4 mr-2" />
+                            Download {youtubeResult.format.toUpperCase()}
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card>
                 <CardHeader>
