@@ -57,6 +57,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (uploadError) {
       console.error('Supabase upload error:', uploadError);
+      
+      // Provide specific error message for missing bucket
+      if (uploadError.message?.includes('Bucket not found')) {
+        return res.status(500).json({ 
+          error: 'Storage bucket not configured. Please contact administrator.',
+          details: 'The file-conversions storage bucket needs to be created in Supabase.' 
+        });
+      }
+      
       return res.status(500).json({ 
         error: 'Failed to upload file',
         details: uploadError.message 

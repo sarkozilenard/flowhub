@@ -19,26 +19,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     switch (req.method) {
       case 'DELETE':
-        // Check if the link exists and belongs to the user
-        const existingLink = await prisma.shortLink.findUnique({
-          where: { id },
-          select: { userId: true }
-        });
+        try {
+          // Delete the link with user ownership check in a single operation
+          const deletedLink = await prisma.shortLink.delete({
+            where: { 
+              id,
+              userId: user.id // Ensure user can only delete their own links
+            }
+          });
 
-        if (!existingLink) {
-          return res.status(404).json({ error: 'Link not found' });
+          return res.status(200).json({ message: 'Link deleted successfully' });
+        } catch (deleteError: any) {
+          // Handle case where link doesn't exist or doesn't belong to user
+          if (deleteError.code === 'P2025') {
+            return res.status(404).json({ error: 'Link not found or you do not have permission to delete it' });
+          }
+          throw deleteError; // Re-throw other errors to be caught by outer catch
         }
-
-        if (existingLink.userId !== user.id) {
-          return res.status(403).json({ error: 'You can only delete your own links' });
-        }
-
-        // Delete the link
-        await prisma.shortLink.delete({
-          where: { id }
-        });
-
-        return res.status(200).json({ message: 'Link deleted successfully' });
 
       default:
         return res.status(405).json({ error: 'Method not allowed' });
