@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let transporter;
     
     if (emailAccount.provider === 'gmail') {
-      transporter = nodemailer.createTransporter({
+      transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: emailAccount.email,
@@ -46,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       });
     } else if (emailAccount.provider === 'outlook') {
-      transporter = nodemailer.createTransporter({
+      transporter = nodemailer.createTransport({
         host: 'smtp-mail.outlook.com',
         port: 587,
         secure: false,
@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       });
     } else if (emailAccount.provider === 'imap' && emailAccount.smtpHost) {
-      transporter = nodemailer.createTransporter({
+      transporter = nodemailer.createTransport({
         host: emailAccount.smtpHost,
         port: emailAccount.smtpPort || 587,
         secure: emailAccount.smtpPort === 465,
