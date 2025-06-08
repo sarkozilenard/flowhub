@@ -45,37 +45,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const baseName = path.basename(originalName, extension);
     const uniqueFileName = `${user.id}-${timestamp}-${baseName}${extension}`;
 
-    // Upload to Supabase Storage
+    // For now, let's use a simpler approach - store file temporarily and return file info
+    // The actual conversion will handle the file processing
     const fileBuffer = fs.readFileSync(file.filepath);
-    
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('file-conversions')
-      .upload(uniqueFileName, fileBuffer, {
-        contentType: file.mimetype || 'application/octet-stream',
-        upsert: false
-      });
-
-    if (uploadError) {
-      console.error('Supabase upload error:', uploadError);
-      
-      // Provide specific error message for missing bucket
-      if (uploadError.message?.includes('Bucket not found')) {
-        return res.status(500).json({ 
-          error: 'Storage bucket not configured. Please contact administrator.',
-          details: 'The file-conversions storage bucket needs to be created in Supabase.' 
-        });
-      }
-      
-      return res.status(500).json({ 
-        error: 'Failed to upload file',
-        details: uploadError.message 
-      });
-    }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('file-conversions')
-      .getPublicUrl(uniqueFileName);
+    const base64Data = fileBuffer.toString('base64');
 
     // Clean up temporary file
     fs.unlinkSync(file.filepath);
@@ -84,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: true,
       fileName: uniqueFileName,
       originalName: originalName,
-      fileUrl: urlData.publicUrl,
+      fileData: base64Data,
       fileSize: file.size,
       mimeType: file.mimetype
     });

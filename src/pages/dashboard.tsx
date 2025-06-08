@@ -518,7 +518,8 @@ export default function Dashboard() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          fileUrl: uploadData.url,
+          fileData: uploadData.fileData,
+          fileName: uploadData.fileName,
           inputFormat: fileConverter.selectedFile.name.split('.').pop()?.toLowerCase(),
           outputFormat: fileConverter.outputFormat,
           options: {

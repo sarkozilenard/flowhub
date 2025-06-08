@@ -15,11 +15,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { fileUrl, inputFormat, outputFormat, options = {} } = req.body;
+    const { fileData, fileName, inputFormat, outputFormat, options = {} } = req.body;
 
-    if (!fileUrl || !inputFormat || !outputFormat) {
+    if (!fileData || !fileName || !inputFormat || !outputFormat) {
       return res.status(400).json({ 
-        error: 'Missing required parameters: fileUrl, inputFormat, outputFormat' 
+        error: 'Missing required parameters: fileData, fileName, inputFormat, outputFormat' 
       });
     }
 
@@ -40,8 +40,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: JSON.stringify({
         tasks: {
           'import-file': {
-            operation: 'import/url',
-            url: fileUrl
+            operation: 'import/base64',
+            file: fileData,
+            filename: fileName
           },
           'convert-file': {
             operation: 'convert',
