@@ -579,13 +579,15 @@ export default function Dashboard() {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className={`grid w-full ${userProfile?.isAdmin ? 'grid-cols-7' : 'grid-cols-6'}`}>
+            <TabsList className={`grid w-full ${userProfile?.isAdmin ? 'grid-cols-9' : 'grid-cols-8'}`}>
               <TabsTrigger value="overview">{t('nav.overview')}</TabsTrigger>
               <TabsTrigger value="todos">{t('nav.todos')}</TabsTrigger>
               <TabsTrigger value="notes">{t('nav.notes')}</TabsTrigger>
               <TabsTrigger value="links">{t('nav.links')}</TabsTrigger>
               <TabsTrigger value="tools">{t('nav.tools')}</TabsTrigger>
+              <TabsTrigger value="timetables">Timetables</TabsTrigger>
               <TabsTrigger value="chat">{t('nav.chat')}</TabsTrigger>
+              <TabsTrigger value="help">Help</TabsTrigger>
               {userProfile?.isAdmin && (
                 <TabsTrigger value="admin">
                   <Shield className="w-4 h-4 mr-1" />
@@ -1298,6 +1300,89 @@ export default function Dashboard() {
                 </Card>
               </div>
               
+              {/* CloudConvert File Converter */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Upload className="w-5 h-5 mr-2" />
+                    File Converter
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="fileToConvert">Select File</Label>
+                    <Input
+                      id="fileToConvert"
+                      type="file"
+                      accept="*/*"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Supports documents, images, audio, video, and more
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Convert to</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select format" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pdf">PDF</SelectItem>
+                          <SelectItem value="docx">DOCX</SelectItem>
+                          <SelectItem value="txt">TXT</SelectItem>
+                          <SelectItem value="jpg">JPG</SelectItem>
+                          <SelectItem value="png">PNG</SelectItem>
+                          <SelectItem value="gif">GIF</SelectItem>
+                          <SelectItem value="mp3">MP3</SelectItem>
+                          <SelectItem value="wav">WAV</SelectItem>
+                          <SelectItem value="mp4">MP4</SelectItem>
+                          <SelectItem value="avi">AVI</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label>Quality</Label>
+                      <Select defaultValue="medium">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <Button className="w-full">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Convert File
+                  </Button>
+                  
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded text-sm">
+                    <strong>Supported formats:</strong>
+                    <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                      <div>
+                        <strong>Documents:</strong> PDF, DOCX, TXT, HTML, RTF
+                      </div>
+                      <div>
+                        <strong>Images:</strong> JPG, PNG, GIF, SVG, WEBP
+                      </div>
+                      <div>
+                        <strong>Audio:</strong> MP3, WAV, FLAC, AAC, OGG
+                      </div>
+                      <div>
+                        <strong>Video:</strong> MP4, AVI, MOV, WEBM, MKV
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Language Translator */}
                 <Card>
@@ -1693,6 +1778,208 @@ export default function Dashboard() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Timetables Tab */}
+            <TabsContent value="timetables" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Timetables & Schedules</h2>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Timetable
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Upload New Timetable</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="timetableTitle">Title</Label>
+                        <Input
+                          id="timetableTitle"
+                          placeholder="Enter timetable title"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="timetableDescription">Description (optional)</Label>
+                        <Textarea
+                          id="timetableDescription"
+                          placeholder="Enter description"
+                          rows={3}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="timetableFile">File</Label>
+                        <Input
+                          id="timetableFile"
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Supported formats: PDF, Images, Word, Excel (Max 10MB)
+                        </p>
+                      </div>
+                      <Button className="w-full">
+                        Upload Timetable
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No timetables yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Upload your first timetable or schedule to get started!
+                    </p>
+                    <Button>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload First Timetable
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Help Tab */}
+            <TabsContent value="help" className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <motion.div variants={fadeInUp}>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <FileText className="w-6 h-6 mr-2 text-blue-500" />
+                        System Wiki
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-muted-foreground">
+                        Complete documentation and guides for using FlowHub's features.
+                      </p>
+                      <div className="space-y-2">
+                        <h4 className="font-semibold">What you'll find:</h4>
+                        <ul className="space-y-1 text-sm text-muted-foreground">
+                          <li>• Feature overviews and tutorials</li>
+                          <li>• Technical specifications</li>
+                          <li>• Admin setup guides</li>
+                          <li>• Frequently asked questions</li>
+                          <li>• Troubleshooting tips</li>
+                        </ul>
+                      </div>
+                      <Button asChild className="w-full">
+                        <a href="/wiki" target="_blank" rel="noopener noreferrer">
+                          <FileText className="w-4 h-4 mr-2" />
+                          Open Wiki
+                        </a>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                <motion.div variants={fadeInUp}>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <MessageSquare className="w-6 h-6 mr-2 text-green-500" />
+                        Contact Support
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-muted-foreground">
+                        Need help? Get in touch with our support team.
+                      </p>
+                      <div className="space-y-2">
+                        <h4 className="font-semibold">Support options:</h4>
+                        <ul className="space-y-1 text-sm text-muted-foreground">
+                          <li>• Contact form for detailed inquiries</li>
+                          <li>• Direct email support</li>
+                          <li>• FAQ section</li>
+                          <li>• Community guidelines</li>
+                        </ul>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Button asChild className="w-full">
+                          <a href="/contact" target="_blank" rel="noopener noreferrer">
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            Contact Form
+                          </a>
+                        </Button>
+                        <Button variant="outline" asChild className="w-full">
+                          <a href="mailto:flowhub@sarkozilenard.hu">
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Email Support
+                          </a>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </div>
+
+              <motion.div variants={fadeInUp}>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Quick Help</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h4 className="font-semibold">Getting Started</h4>
+                        <div className="space-y-3">
+                          <div className="border-l-4 border-blue-500 pl-4">
+                            <h5 className="font-medium">Create your first task</h5>
+                            <p className="text-sm text-muted-foreground">
+                              Go to the To-Dos tab and click "Add Task" to create your first productivity item.
+                            </p>
+                          </div>
+                          <div className="border-l-4 border-green-500 pl-4">
+                            <h5 className="font-medium">Take notes</h5>
+                            <p className="text-sm text-muted-foreground">
+                              Use the Notes tab to create and organize your thoughts with tags and rich content.
+                            </p>
+                          </div>
+                          <div className="border-l-4 border-purple-500 pl-4">
+                            <h5 className="font-medium">Shorten links</h5>
+                            <p className="text-sm text-muted-foreground">
+                              Create custom short links in the Links tab and track their performance.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <h4 className="font-semibold">Advanced Features</h4>
+                        <div className="space-y-3">
+                          <div className="border-l-4 border-orange-500 pl-4">
+                            <h5 className="font-medium">Use productivity tools</h5>
+                            <p className="text-sm text-muted-foreground">
+                              Access text converters, unit converters, and translation tools in the Tools tab.
+                            </p>
+                          </div>
+                          <div className="border-l-4 border-red-500 pl-4">
+                            <h5 className="font-medium">AI assistance</h5>
+                            <p className="text-sm text-muted-foreground">
+                              Chat with the AI assistant for productivity tips and task organization help.
+                            </p>
+                          </div>
+                          <div className="border-l-4 border-teal-500 pl-4">
+                            <h5 className="font-medium">Manage timetables</h5>
+                            <p className="text-sm text-muted-foreground">
+                              Upload and organize your schedules and timetables for easy access.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </TabsContent>
 
             {/* Admin Tab */}

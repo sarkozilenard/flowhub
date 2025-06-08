@@ -23,6 +23,7 @@ model User {
   events     Event[]
   notes      Note[]
   shortLinks ShortLink[]
+  timetables Timetable[]
 }
 
 model Todo {
@@ -86,4 +87,21 @@ model ShortLink {
   
   @@index([userId])
   @@index([shortCode])
+}
+
+model Timetable {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  fileName    String
+  fileUrl     String
+  fileSize    Int
+  fileType    String
+  uploadedAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  userId      String   @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
 }
