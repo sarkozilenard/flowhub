@@ -12,9 +12,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ message: 'All fields are required' });
   }
 
+  // Check if SMTP credentials are configured
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.error('SMTP credentials not configured');
+    return res.status(503).json({ 
+      message: 'Email service is currently unavailable. Please contact us directly at flowhub@sarkozilenard.hu' 
+    });
+  }
+
   try {
     // Create a transporter using SMTP
-    const transporter = nodemailer.createTransport({
+    const transporter = nodemailer.createTransporter({
       host: 'smtp.gmail.com',
       port: 587,
       secure: false,
@@ -22,7 +30,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
+
+    // Verify the connection
+    await transporter.verify();
 
     // Email content
     const mailOptions = {
@@ -59,8 +73,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await transporter.sendMail(mailOptions);
 
     res.status(200).json({ message: 'Email sent successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error sending email:', error);
-    res.status(500).json({ message: 'Failed to send email' });
+    
+    // Handle specific authentication errors
+    if (error.code === 'EAUTH' || error.responseCode === 535) {
+      return res.status(503).json({ 
+        message: 'Email service authentication failed. Please contact us directly at flowhub@sarkozilenard.hu' 
+      });
+    }
+    
+    // Handle other errors
+    res.status(500).json({ 
+      message: 'Failed to send email. Please try again or contact us directly at flowhub@sarkozilenard.hu' 
+    });
   }
 }
