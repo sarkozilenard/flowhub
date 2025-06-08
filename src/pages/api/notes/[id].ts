@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       default:
         return res.status(405).json({ error: 'Method not allowed' });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in note API:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'Note not found' });
