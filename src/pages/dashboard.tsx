@@ -1564,202 +1564,49 @@ export default function Dashboard() {
 
             {/* Email Tab */}
             <TabsContent value="email" className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Email Client</h2>
-                <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Email Account
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Email Account</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="emailAddress">Email Address</Label>
-                        <Input
-                          id="emailAddress"
-                          type="email"
-                          value={emailForm.email}
-                          onChange={(e) => setEmailForm({...emailForm, email: e.target.value})}
-                          placeholder="your.email@example.com"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="emailProvider">Provider</Label>
-                        <Select value={emailForm.provider} onValueChange={(value) => setEmailForm({...emailForm, provider: value})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select email provider" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="gmail">Gmail</SelectItem>
-                            <SelectItem value="outlook">Outlook</SelectItem>
-                            <SelectItem value="imap">IMAP/SMTP</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                        <h4 className="font-medium mb-2">Setup Instructions:</h4>
-                        <ul className="text-sm space-y-1">
-                          <li>• <strong>Gmail:</strong> Enable 2FA and create an App Password</li>
-                          <li>• <strong>Outlook:</strong> Use OAuth authentication</li>
-                          <li>• <strong>IMAP:</strong> Enter server settings manually</li>
-                        </ul>
-                      </div>
-                      <Button 
-                        onClick={addEmailAccount} 
-                        className="w-full"
-                        disabled={emailLoading}
-                      >
-                        {emailLoading ? 'Adding...' : 'Add Account'}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              {emailAccounts.length > 0 ? (
-                <div className="space-y-4">
-                  {emailAccounts.map((account) => (
-                    <Card key={account.id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-medium">{account.email}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {account.provider} • {account._count?.emails || 0} emails
-                            </p>
-                          </div>
-                          <Badge variant={account.isActive ? "default" : "secondary"}>
-                            {account.isActive ? "Active" : "Inactive"}
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Card>
-                  <CardContent className="p-8 text-center">
-                    <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No email accounts configured</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Add your first email account to start managing emails directly from FlowHub!
-                    </p>
-                    <Button onClick={() => setEmailDialogOpen(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add First Email Account
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Email Setup Guide */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Email Setup & Usage Guide</CardTitle>
+                  <CardTitle className="flex items-center">
+                    <MessageSquare className="w-5 h-5 mr-2" />
+                    Email Client
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-6">
-                    <div className="p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
-                      <h4 className="font-medium mb-2 text-yellow-800 dark:text-yellow-200">⚠️ Current Status</h4>
-                      <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                        The email client is currently in development. Basic account management is available, but full email reading/sending functionality requires additional setup and configuration.
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-blue-100 dark:bg-blue-950 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <MessageSquare className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    
+                    <h3 className="text-xl font-semibold mb-3">Email Client - Under Development</h3>
+                    
+                    <div className="max-w-md mx-auto space-y-4">
+                      <p className="text-muted-foreground">
+                        The Email Client feature is currently under development and will be available in a future update.
                       </p>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                        <h4 className="font-semibold">How to Read Emails</h4>
-                        <div className="space-y-3 text-sm">
-                          <div className="border-l-4 border-blue-500 pl-4">
-                            <h5 className="font-medium">1. Add Email Account</h5>
-                            <p className="text-muted-foreground">
-                              Click "Add Email Account" and configure your email provider settings.
-                            </p>
-                          </div>
-                          <div className="border-l-4 border-green-500 pl-4">
-                            <h5 className="font-medium">2. Configure IMAP/OAuth</h5>
-                            <p className="text-muted-foreground">
-                              For Gmail: Enable 2FA and create an App Password. For others: Use IMAP settings.
-                            </p>
-                          </div>
-                          <div className="border-l-4 border-purple-500 pl-4">
-                            <h5 className="font-medium">3. Sync Emails</h5>
-                            <p className="text-muted-foreground">
-                              Once configured, emails will be synced and displayed in your inbox.
-                            </p>
-                          </div>
-                        </div>
+                      
+                      <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg text-left">
+                        <h4 className="font-medium mb-2 text-blue-800 dark:text-blue-200">Planned Features:</h4>
+                        <ul className="text-sm space-y-1 text-blue-700 dark:text-blue-300">
+                          <li>• Multiple email account management</li>
+                          <li>• IMAP/SMTP integration</li>
+                          <li>• OAuth authentication (Gmail, Outlook)</li>
+                          <li>• Email composition and sending</li>
+                          <li>• Folder and label organization</li>
+                          <li>• Search and filtering capabilities</li>
+                          <li>• Mobile-friendly interface</li>
+                        </ul>
                       </div>
-
-                      <div className="space-y-4">
-                        <h4 className="font-semibold">How to Send Emails</h4>
-                        <div className="space-y-3 text-sm">
-                          <div className="border-l-4 border-orange-500 pl-4">
-                            <h5 className="font-medium">1. Configure SMTP</h5>
-                            <p className="text-muted-foreground">
-                              SMTP settings are required for sending emails through FlowHub.
-                            </p>
-                          </div>
-                          <div className="border-l-4 border-red-500 pl-4">
-                            <h5 className="font-medium">2. Compose Interface</h5>
-                            <p className="text-muted-foreground">
-                              Use the built-in compose interface to write and send emails.
-                            </p>
-                          </div>
-                          <div className="border-l-4 border-teal-500 pl-4">
-                            <h5 className="font-medium">3. Email Management</h5>
-                            <p className="text-muted-foreground">
-                              Organize emails with folders, labels, and search functionality.
-                            </p>
-                          </div>
-                        </div>
+                      
+                      <div className="p-4 bg-orange-50 dark:bg-orange-950/50 rounded-lg text-left">
+                        <h4 className="font-medium mb-2 text-orange-800 dark:text-orange-200">Development Status:</h4>
+                        <p className="text-sm text-orange-700 dark:text-orange-300">
+                          We're working on implementing secure email protocols, OAuth flows, and a comprehensive email management interface. 
+                          This feature requires careful security considerations and extensive testing.
+                        </p>
                       </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <h4 className="font-semibold">Provider-Specific Setup</h4>
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <div className="p-4 border rounded-lg">
-                          <h5 className="font-medium mb-2">Gmail Setup</h5>
-                          <ul className="text-sm space-y-1 text-muted-foreground">
-                            <li>• Enable 2-Factor Authentication</li>
-                            <li>• Generate App Password</li>
-                            <li>• Use IMAP: imap.gmail.com:993</li>
-                            <li>• Use SMTP: smtp.gmail.com:587</li>
-                          </ul>
-                        </div>
-                        <div className="p-4 border rounded-lg">
-                          <h5 className="font-medium mb-2">Outlook Setup</h5>
-                          <ul className="text-sm space-y-1 text-muted-foreground">
-                            <li>• Use OAuth2 authentication</li>
-                            <li>• IMAP: outlook.office365.com:993</li>
-                            <li>• SMTP: smtp-mail.outlook.com:587</li>
-                            <li>• Enable modern authentication</li>
-                          </ul>
-                        </div>
-                        <div className="p-4 border rounded-lg">
-                          <h5 className="font-medium mb-2">Custom IMAP</h5>
-                          <ul className="text-sm space-y-1 text-muted-foreground">
-                            <li>• Get IMAP/SMTP settings from provider</li>
-                            <li>• Configure ports and security</li>
-                            <li>• Test connection settings</li>
-                            <li>• Enable less secure apps if needed</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                      <h4 className="font-medium mb-2 text-blue-800 dark:text-blue-200">💡 Development Note</h4>
-                      <p className="text-sm text-blue-700 dark:text-blue-300">
-                        Full email functionality requires implementing IMAP/SMTP clients, OAuth flows, and email parsing. 
-                        The current implementation provides the database structure and basic account management. 
-                        For immediate email needs, consider using your regular email client alongside FlowHub.
+                      
+                      <p className="text-sm text-muted-foreground">
+                        For now, please continue using your preferred email client. We'll notify you when this feature becomes available.
                       </p>
                     </div>
                   </div>
@@ -1969,128 +1816,54 @@ export default function Dashboard() {
 
             {/* YouTube Downloader Tab */}
             <TabsContent value="youtube" className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">YouTube Downloader</h2>
-              </div>
-
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Download className="w-5 h-5 mr-2" />
-                    Download YouTube Videos & Playlists
+                    YouTube Downloader
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="youtubeUrl">YouTube URL</Label>
-                    <Input
-                      id="youtubeUrl"
-                      value={youtubeForm.url}
-                      onChange={(e) => setYoutubeForm({...youtubeForm, url: e.target.value})}
-                      placeholder="https://www.youtube.com/watch?v=..."
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Supports individual videos and playlists
-                    </p>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="downloadFormat">Format</Label>
-                      <Select value={youtubeForm.format} onValueChange={(value) => setYoutubeForm({...youtubeForm, format: value})}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="mp4">MP4 (Video)</SelectItem>
-                          <SelectItem value="mp3">MP3 (Audio)</SelectItem>
-                        </SelectContent>
-                      </Select>
+                <CardContent>
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-red-100 dark:bg-red-950 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Download className="w-8 h-8 text-red-600 dark:text-red-400" />
                     </div>
-                    <div>
-                      <Label htmlFor="downloadQuality">Quality</Label>
-                      <Select value={youtubeForm.quality} onValueChange={(value) => setYoutubeForm({...youtubeForm, quality: value})}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="highest">Highest</SelectItem>
-                          <SelectItem value="720p">720p</SelectItem>
-                          <SelectItem value="480p">480p</SelectItem>
-                          <SelectItem value="360p">360p</SelectItem>
-                          <SelectItem value="lowest">Lowest</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    onClick={processYouTubeVideo} 
-                    className="w-full"
-                    disabled={youtubeProcessing}
-                  >
-                    {youtubeProcessing ? (
-                      <>
-                        <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-4 h-4 mr-2" />
-                        Process Video
-                      </>
-                    )}
-                  </Button>
-                  
-                  <div className="p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
-                    <h4 className="font-medium mb-2 text-yellow-800 dark:text-yellow-200">Important Notice:</h4>
-                    <ul className="text-sm space-y-1 text-yellow-700 dark:text-yellow-300">
-                      <li>• Only download content you have permission to use</li>
-                      <li>• Respect copyright laws and YouTube's Terms of Service</li>
-                      <li>• Large files may take time to process</li>
-                      <li>• This tool is for personal use and educational purposes</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {youtubeResult && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Processing Result</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div>
-                        <h3 className="font-medium">{youtubeResult.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Duration: {youtubeResult.duration} • Format: {youtubeResult.format}
+                    
+                    <h3 className="text-xl font-semibold mb-3">YouTube Downloader - Under Development</h3>
+                    
+                    <div className="max-w-md mx-auto space-y-4">
+                      <p className="text-muted-foreground">
+                        The YouTube video downloader is currently under development due to recent changes in YouTube's API and anti-bot measures.
+                      </p>
+                      
+                      <div className="p-4 bg-red-50 dark:bg-red-950/50 rounded-lg text-left">
+                        <h4 className="font-medium mb-2 text-red-800 dark:text-red-200">Current Status:</h4>
+                        <p className="text-sm text-red-700 dark:text-red-300">
+                          This feature is temporarily unavailable while we work on implementing a more robust solution that complies with YouTube's latest policies and technical requirements.
                         </p>
                       </div>
-                      {youtubeResult.downloadUrl && (
-                        <Button asChild className="w-full">
-                          <a href={youtubeResult.downloadUrl} download>
-                            <Download className="w-4 h-4 mr-2" />
-                            Download {youtubeResult.format.toUpperCase()}
-                          </a>
-                        </Button>
-                      )}
+                      
+                      <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg text-left">
+                        <h4 className="font-medium mb-2 text-blue-800 dark:text-blue-200">Alternative Solutions:</h4>
+                        <ul className="text-sm space-y-1 text-blue-700 dark:text-blue-300">
+                          <li>• Use browser extensions like Video DownloadHelper</li>
+                          <li>• Try online YouTube downloaders (yt1s.com, y2mate.com)</li>
+                          <li>• Use desktop applications like yt-dlp or 4K Video Downloader</li>
+                          <li>• Save videos to "Watch Later" playlist for offline viewing in YouTube app</li>
+                        </ul>
+                      </div>
+                      
+                      <div className="p-4 bg-orange-50 dark:bg-orange-950/50 rounded-lg text-left">
+                        <h4 className="font-medium mb-2 text-orange-800 dark:text-orange-200">Development Update:</h4>
+                        <p className="text-sm text-orange-700 dark:text-orange-300">
+                          We are working on restoring this functionality with improved reliability and compliance. Please check back in future updates for the restored feature.
+                        </p>
+                      </div>
+                      
+                      <p className="text-sm text-muted-foreground">
+                        Thank you for your patience as we work to provide a better downloading experience.
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Download History</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Download className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No downloads yet</h3>
-                    <p className="text-muted-foreground">
-                      Your download history will appear here once you start downloading videos.
-                    </p>
                   </div>
                 </CardContent>
               </Card>

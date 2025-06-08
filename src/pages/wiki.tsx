@@ -453,23 +453,113 @@ export default function Wiki() {
                       <CardTitle className="heading-mobile-lg flex items-center">
                         <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-orange-500" />
                         AI Chat Assistant
+                        <Badge variant="outline" className="ml-2 text-xs">Under Development</Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <p className="text-xs sm:text-sm text-muted-foreground">
-                        Integrated ChatGPT for productivity assistance.
+                        AI Chat Assistant is currently under development for better performance and cost efficiency.
                       </p>
                       <ul className="space-y-1 text-xs sm:text-sm">
-                        <li>• Productivity tips and advice</li>
-                        <li>• Task organization help</li>
-                        <li>• Note-taking strategies</li>
-                        <li>• General assistance</li>
-                        <li>• Context-aware responses</li>
-                        <li>• Quick action buttons</li>
+                        <li>• Productivity tips and advice (planned)</li>
+                        <li>• Task organization help (planned)</li>
+                        <li>• Note-taking strategies (planned)</li>
+                        <li>• General assistance (planned)</li>
+                        <li>• Context-aware responses (planned)</li>
+                        <li>• Quick action buttons (planned)</li>
                       </ul>
                       
                       <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-950 rounded text-xs text-orange-700 dark:text-orange-300">
-                        <strong>Note:</strong> AI chat may be limited by API quotas
+                        <strong>Status:</strong> Currently being optimized for better performance and reliability
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                <motion.div variants={fadeInUp}>
+                  <Card className="card-mobile">
+                    <CardHeader>
+                      <CardTitle className="heading-mobile-lg flex items-center">
+                        <Download className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-red-500" />
+                        YouTube Downloader
+                        <Badge variant="outline" className="ml-2 text-xs">Under Development</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        YouTube video downloader is temporarily unavailable due to API changes and anti-bot measures.
+                      </p>
+                      <ul className="space-y-1 text-xs sm:text-sm">
+                        <li>• Video and playlist downloading (planned)</li>
+                        <li>• Multiple format support (MP4, MP3) (planned)</li>
+                        <li>• Quality selection (planned)</li>
+                        <li>• Download history (planned)</li>
+                      </ul>
+                      
+                      <div className="mt-3 p-2 bg-red-50 dark:bg-red-950 rounded text-xs text-red-700 dark:text-red-300">
+                        <strong>Status:</strong> Being rebuilt to comply with YouTube's latest policies
+                      </div>
+                      
+                      <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-950 rounded text-xs text-blue-700 dark:text-blue-300">
+                        <strong>Alternatives:</strong> Browser extensions, online downloaders, or desktop apps like yt-dlp
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                <motion.div variants={fadeInUp}>
+                  <Card className="card-mobile">
+                    <CardHeader>
+                      <CardTitle className="heading-mobile-lg flex items-center">
+                        <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-500" />
+                        Email Client
+                        <Badge variant="outline" className="ml-2 text-xs">Under Development</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Email client feature is under development with secure protocols and comprehensive management.
+                      </p>
+                      <ul className="space-y-1 text-xs sm:text-sm">
+                        <li>• Multiple email account management (planned)</li>
+                        <li>• IMAP/SMTP integration (planned)</li>
+                        <li>• OAuth authentication (Gmail, Outlook) (planned)</li>
+                        <li>• Email composition and sending (planned)</li>
+                        <li>• Folder and label organization (planned)</li>
+                        <li>• Search and filtering capabilities (planned)</li>
+                      </ul>
+                      
+                      <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-950 rounded text-xs text-blue-700 dark:text-blue-300">
+                        <strong>Status:</strong> Implementing secure email protocols and OAuth flows
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                <motion.div variants={fadeInUp}>
+                  <Card className="card-mobile">
+                    <CardHeader>
+                      <CardTitle className="heading-mobile-lg flex items-center">
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 mr-2 bg-foreground rounded-sm"></div>
+                        QR Code Generator
+                        <Badge variant="outline" className="ml-2 text-xs bg-green-100 text-green-800">Active</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Generate custom QR codes for any content with customization options.
+                      </p>
+                      <ul className="space-y-1 text-xs sm:text-sm">
+                        <li>• Custom QR code generation</li>
+                        <li>• Automatic QR codes for short links</li>
+                        <li>• Color customization</li>
+                        <li>• Multiple sizes (100x100 to 500x500)</li>
+                        <li>• PNG and SVG format support</li>
+                        <li>• Download and delete functionality</li>
+                      </ul>
+                      
+                      <div className="mt-3 p-2 bg-green-50 dark:bg-green-950 rounded text-xs text-green-700 dark:text-green-300">
+                        <strong>Status:</strong> Fully functional and ready to use
                       </div>
                     </CardContent>
                   </Card>
