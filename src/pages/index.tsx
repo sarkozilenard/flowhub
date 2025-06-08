@@ -127,8 +127,6 @@ const fileConverters = [
   }
 ];
 
-=======
-
 export default function Home() {
   const { t } = useLanguage();
   const features = getFeatures(t);
