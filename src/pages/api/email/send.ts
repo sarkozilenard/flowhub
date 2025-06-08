@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           user: emailAccount.email,
           pass: emailAccount.password // App password
         }
-      });
+      } as any);
     } else if (emailAccount.provider === 'outlook') {
       transporter = nodemailer.createTransport({
         host: 'smtp-mail.outlook.com',
@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           user: emailAccount.email,
           pass: emailAccount.password
         }
-      });
+      } as any);
     } else if (emailAccount.provider === 'imap' && emailAccount.smtpHost) {
       transporter = nodemailer.createTransport({
         host: emailAccount.smtpHost,
@@ -64,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           user: emailAccount.username || emailAccount.email,
           pass: emailAccount.password
         }
-      });
+      } as any);
     } else {
       return res.status(400).json({ error: 'SMTP configuration not available for this account' });
     }
