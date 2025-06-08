@@ -179,7 +179,7 @@ const LoginPage = () => {
                         <Checkbox
                           id="rememberMe"
                           checked={rememberMe}
-                          onCheckedChange={setRememberMe}
+                          onCheckedChange={(checked) => setRememberMe(checked === true)}
                         />
                         <Label htmlFor="rememberMe" className="text-sm text-muted-foreground">
                           Remember me
