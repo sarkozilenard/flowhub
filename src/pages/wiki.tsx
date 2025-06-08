@@ -649,7 +649,7 @@ export default function Wiki() {
                           <li>Ensure the user has signed up and created an account</li>
                           <li>Use the admin setup API endpoint: <code className="bg-background px-2 py-1 rounded">/api/admin/setup</code></li>
                           <li>Send a POST request with the user's email or username</li>
-                          <li>Example payload: <code className="bg-background px-2 py-1 rounded">{"{ \"email\": \"admin@example.com\" }"}</code></li>
+                          <li>Example payload: <code className="bg-background px-2 py-1 rounded">{`{ "email": "admin@example.com" }`}</code></li>
                         </ol>
                       </div>
                       
@@ -659,7 +659,7 @@ export default function Wiki() {
                           <p><strong>URL:</strong> <code className="bg-background px-2 py-1 rounded">/api/admin/setup</code></p>
                           <p><strong>Method:</strong> POST</p>
                           <p><strong>Content-Type:</strong> application/json</p>
-                          <p><strong>Body:</strong> <code className="bg-background px-2 py-1 rounded">{"{ \"email\": \"user@example.com\" }"}</code></p>
+                          <p><strong>Body:</strong> <code className="bg-background px-2 py-1 rounded">{`{ "email": "user@example.com" }`}</code></p>
                         </div>
                       </div>
                       
