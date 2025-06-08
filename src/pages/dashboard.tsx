@@ -169,8 +169,22 @@ export default function Dashboard() {
     password: ''
   });
   const [emailAccounts, setEmailAccounts] = useState<any[]>([]);
+  const [emails, setEmails] = useState<any[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<string>('');
+  const [selectedFolder, setSelectedFolder] = useState<string>('INBOX');
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [composeDialogOpen, setComposeDialogOpen] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
+  const [emailSyncing, setEmailSyncing] = useState(false);
+  const [composeForm, setComposeForm] = useState({
+    to: '',
+    cc: '',
+    bcc: '',
+    subject: '',
+    body: '',
+    htmlBody: ''
+  });
+  const [composeSending, setComposeSending] = useState(false);
 
   // YouTube states
   const [youtubeForm, setYoutubeForm] = useState({
@@ -2628,202 +2642,107 @@ export default function Dashboard() {
 
             {/* AI Chat Tab */}
             <TabsContent value="chat" className="space-y-6">
-              <Card className="h-[600px] flex flex-col">
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <MessageSquare className="w-5 h-5 mr-2" />
-                    {t('nav.chat')} Assistant
+                    AI Chat Assistant
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col space-y-4">
-                  {/* Chat Messages */}
-                  <div className="flex-1 overflow-y-auto space-y-4 p-4 bg-muted/30 rounded-lg">
-                    {chatMessages.length === 0 ? (
-                      <div className="text-center text-muted-foreground py-8">
-                        <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                        <p>Start a conversation with your AI assistant!</p>
-                        <p className="text-sm mt-2">Ask about productivity tips, task management, or anything else.</p>
-                        <p className="text-sm mt-2 text-orange-600">Note: AI chat is currently unavailable due to API quota limits.</p>
+                <CardContent>
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-orange-100 dark:bg-orange-950 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <MessageSquare className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    
+                    <h3 className="text-xl font-semibold mb-3">AI Chat - Under Development</h3>
+                    
+                    <div className="max-w-md mx-auto space-y-4">
+                      <p className="text-muted-foreground">
+                        The AI Chat Assistant is currently being developed and will be available soon.
+                      </p>
+                      
+                      <div className="p-4 bg-orange-50 dark:bg-orange-950/50 rounded-lg text-left">
+                        <h4 className="font-medium mb-2 text-orange-800 dark:text-orange-200">Coming Soon:</h4>
+                        <ul className="text-sm space-y-1 text-orange-700 dark:text-orange-300">
+                          <li>• Productivity tips and advice</li>
+                          <li>• Task organization assistance</li>
+                          <li>• Note-taking strategies</li>
+                          <li>• Time management guidance</li>
+                          <li>• General productivity questions</li>
+                        </ul>
                       </div>
-                    ) : (
-                      chatMessages.map((message, index) => (
-                        <div
-                          key={index}
-                          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div
-                            className={`max-w-[80%] p-3 rounded-lg ${
-                              message.role === 'user'
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-background border'
-                            }`}
-                          >
-                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                          </div>
+                      
+                      <div className="p-4 bg-blue-50 dark:bg-blue-950/50 rounded-lg text-left">
+                        <h4 className="font-medium mb-2 text-blue-800 dark:text-blue-200">Development Status:</h4>
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
+                          The AI chat functionality is being optimized for better performance and cost efficiency. 
+                          We're working on implementing a more robust solution that will provide consistent and helpful responses.
+                        </p>
+                      </div>
+                      
+                      <p className="text-sm text-muted-foreground">
+                        In the meantime, you can use all other FlowHub features including tasks, notes, links, and productivity tools.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Feature Preview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>AI Assistant Preview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h4 className="font-semibold">Planned Features</h4>
+                      <div className="space-y-3">
+                        <div className="border-l-4 border-blue-500 pl-4">
+                          <h5 className="font-medium">Smart Productivity Advice</h5>
+                          <p className="text-sm text-muted-foreground">
+                            Get personalized tips based on your task completion patterns and productivity habits.
+                          </p>
                         </div>
-                      ))
-                    )}
-                    {chatLoading && (
-                      <div className="flex justify-start">
-                        <div className="bg-background border p-3 rounded-lg">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                          </div>
+                        <div className="border-l-4 border-green-500 pl-4">
+                          <h5 className="font-medium">Task Organization Help</h5>
+                          <p className="text-sm text-muted-foreground">
+                            Receive suggestions on how to prioritize and organize your tasks for maximum efficiency.
+                          </p>
+                        </div>
+                        <div className="border-l-4 border-purple-500 pl-4">
+                          <h5 className="font-medium">Context-Aware Responses</h5>
+                          <p className="text-sm text-muted-foreground">
+                            The AI will understand your FlowHub data to provide relevant and actionable advice.
+                          </p>
                         </div>
                       </div>
-                    )}
-                  </div>
-                  
-                  {/* Chat Input */}
-                  <div className="flex space-x-2">
-                    <Input
-                      placeholder="Type your message..."
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          if (chatInput.trim() && !chatLoading) {
-                            const sendMessage = async () => {
-                              const userMessage = chatInput.trim();
-                              const newMessages = [...chatMessages, { role: 'user' as const, content: userMessage }];
-                              
-                              setChatMessages(newMessages);
-                              setChatInput('');
-                              setChatLoading(true);
-                              
-                              try {
-                                const response = await fetch('/api/chat', {
-                                  method: 'POST',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                  },
-                                  body: JSON.stringify({
-                                    messages: newMessages.map(msg => ({
-                                      role: msg.role,
-                                      content: msg.content
-                                    }))
-                                  }),
-                                });
-                                
-                                if (!response.ok) {
-                                  throw new Error('Failed to get response');
-                                }
-                                
-                                const data = await response.json();
-                                setChatMessages([...newMessages, { role: 'assistant', content: data.message }]);
-                              } catch (error) {
-                                console.error('Chat error:', error);
-                                setChatMessages([...newMessages, { 
-                                  role: 'assistant', 
-                                  content: 'Sorry, I encountered an error. The AI service is currently unavailable due to quota limits.' 
-                                }]);
-                                toast({
-                                  variant: "destructive",
-                                  title: t('message.error'),
-                                  description: "AI service is currently unavailable",
-                                });
-                              } finally {
-                                setChatLoading(false);
-                              }
-                            };
-                            sendMessage();
-                          }
-                        }
-                      }}
-                      disabled={chatLoading}
-                    />
-                    <Button
-                      onClick={async () => {
-                        if (chatInput.trim() && !chatLoading) {
-                          const userMessage = chatInput.trim();
-                          const newMessages = [...chatMessages, { role: 'user' as const, content: userMessage }];
-                          
-                          setChatMessages(newMessages);
-                          setChatInput('');
-                          setChatLoading(true);
-                          
-                          try {
-                            const response = await fetch('/api/chat', {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                              },
-                              body: JSON.stringify({
-                                messages: newMessages.map(msg => ({
-                                  role: msg.role,
-                                  content: msg.content
-                                }))
-                              }),
-                            });
-                            
-                            if (!response.ok) {
-                              throw new Error('Failed to get response');
-                            }
-                            
-                            const data = await response.json();
-                            setChatMessages([...newMessages, { role: 'assistant', content: data.message }]);
-                          } catch (error) {
-                            console.error('Chat error:', error);
-                            setChatMessages([...newMessages, { 
-                              role: 'assistant', 
-                              content: 'Sorry, I encountered an error. The AI service is currently unavailable due to quota limits.' 
-                            }]);
-                            toast({
-                              variant: "destructive",
-                              title: t('message.error'),
-                              description: "AI service is currently unavailable",
-                            });
-                          } finally {
-                            setChatLoading(false);
-                          }
-                        }
-                      }}
-                      disabled={!chatInput.trim() || chatLoading}
-                    >
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  
-                  {/* Quick Actions */}
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setChatInput("How can I be more productive?")}
-                      disabled={chatLoading}
-                    >
-                      Productivity Tips
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setChatInput("Help me organize my tasks")}
-                      disabled={chatLoading}
-                    >
-                      Task Organization
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setChatInput("What's a good note-taking strategy?")}
-                      disabled={chatLoading}
-                    >
-                      Note-taking Tips
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setChatMessages([]);
-                        setChatInput('');
-                      }}
-                      disabled={chatLoading}
-                    >
-                      Clear Chat
-                    </Button>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h4 className="font-semibold">Integration Benefits</h4>
+                      <div className="space-y-3">
+                        <div className="border-l-4 border-orange-500 pl-4">
+                          <h5 className="font-medium">Seamless Workflow</h5>
+                          <p className="text-sm text-muted-foreground">
+                            Chat directly within FlowHub without switching between different applications.
+                          </p>
+                        </div>
+                        <div className="border-l-4 border-red-500 pl-4">
+                          <h5 className="font-medium">Privacy Focused</h5>
+                          <p className="text-sm text-muted-foreground">
+                            Your conversations and data remain private and are not shared with external services.
+                          </p>
+                        </div>
+                        <div className="border-l-4 border-teal-500 pl-4">
+                          <h5 className="font-medium">Always Available</h5>
+                          <p className="text-sm text-muted-foreground">
+                            Get instant help and advice whenever you need it, 24/7.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
