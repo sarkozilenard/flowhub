@@ -133,6 +133,21 @@ export default function Dashboard() {
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [adminLoading, setAdminLoading] = useState(false);
 
+  // File converter states
+  const [fileConverter, setFileConverter] = useState({
+    selectedFile: null as File | null,
+    outputFormat: '',
+    quality: 'medium',
+    converting: false,
+    convertedFiles: [] as Array<{
+      id: string;
+      originalName: string;
+      outputFormat: string;
+      downloadUrl: string;
+      createdAt: string;
+    }>
+  });
+
   useEffect(() => {
     if (user) {
       fetchData();
@@ -363,6 +378,35 @@ export default function Dashboard() {
     });
   };
 
+  const deleteShortLink = async (id: string) => {
+    try {
+      const response = await fetch(`/api/shortlinks/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        setShortLinks(shortLinks.filter(link => link.id !== id));
+        
+        toast({
+          title: t('message.success'),
+          description: "Short link deleted successfully",
+        });
+      } else {
+        throw new Error('Failed to delete link');
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: t('message.error'),
+        description: "Failed to delete short link",
+      });
+    }
+  };
+
+  const openOriginalUrl = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   // Profile update function
   const updateUserProfile = async () => {
     try {
@@ -426,6 +470,122 @@ export default function Dashboard() {
         description: error.message || "Failed to update user",
       });
     }
+  };
+
+  // File converter functions
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setFileConverter({
+        ...fileConverter,
+        selectedFile: file
+      });
+    }
+  };
+
+  const convertFile = async () => {
+    if (!fileConverter.selectedFile || !fileConverter.outputFormat) {
+      toast({
+        variant: "destructive",
+        title: t('message.error'),
+        description: "Please select a file and output format",
+      });
+      return;
+    }
+
+    setFileConverter({...fileConverter, converting: true});
+
+    try {
+      // Upload file first
+      const formData = new FormData();
+      formData.append('file', fileConverter.selectedFile);
+
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      const uploadData = await uploadResponse.json();
+
+      // Start conversion
+      const convertResponse = await fetch('/api/convert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileUrl: uploadData.url,
+          inputFormat: fileConverter.selectedFile.name.split('.').pop()?.toLowerCase(),
+          outputFormat: fileConverter.outputFormat,
+          options: {
+            quality: fileConverter.quality
+          }
+        })
+      });
+
+      if (!convertResponse.ok) {
+        throw new Error('Failed to start conversion');
+      }
+
+      const convertData = await convertResponse.json();
+
+      // Poll for completion
+      const pollForCompletion = async (jobId: string) => {
+        const statusResponse = await fetch(`/api/convert/status/${jobId}`);
+        const statusData = await statusResponse.json();
+
+        if (statusData.status === 'finished') {
+          const newConvertedFile = {
+            id: Date.now().toString(),
+            originalName: fileConverter.selectedFile!.name,
+            outputFormat: fileConverter.outputFormat,
+            downloadUrl: statusData.downloadUrl,
+            createdAt: new Date().toISOString()
+          };
+
+          setFileConverter({
+            ...fileConverter,
+            converting: false,
+            convertedFiles: [newConvertedFile, ...fileConverter.convertedFiles],
+            selectedFile: null,
+            outputFormat: ''
+          });
+
+          toast({
+            title: t('message.success'),
+            description: "File converted successfully! Double-click to download.",
+          });
+        } else if (statusData.status === 'error') {
+          throw new Error('Conversion failed');
+        } else {
+          // Still processing, poll again
+          setTimeout(() => pollForCompletion(jobId), 2000);
+        }
+      };
+
+      pollForCompletion(convertData.jobId);
+
+    } catch (error) {
+      setFileConverter({...fileConverter, converting: false});
+      toast({
+        variant: "destructive",
+        title: t('message.error'),
+        description: "File conversion failed. Please try again.",
+      });
+    }
+  };
+
+  const downloadConvertedFile = (downloadUrl: string, fileName: string) => {
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Text converter function
@@ -1070,23 +1230,34 @@ export default function Dashboard() {
                           </div>
                           
                           <div className="flex items-center justify-between bg-muted p-2 rounded">
-                            <code className="text-sm">
+                            <code className="text-sm flex-1 mr-2 truncate">
                               {window.location.origin}/s/{link.shortCode}
                             </code>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-1">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => copyShortLink(link.shortCode)}
+                                title="Copy link"
                               >
                                 <Copy className="w-4 h-4" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => window.open(link.originalUrl, '_blank')}
+                                onClick={() => openOriginalUrl(link.originalUrl)}
+                                title="Open original URL"
                               >
                                 <ExternalLink className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteShortLink(link.id)}
+                                title="Delete link"
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
                               </Button>
                             </div>
                           </div>
@@ -1352,16 +1523,18 @@ export default function Dashboard() {
                       id="fileToConvert"
                       type="file"
                       accept="*/*"
+                      onChange={handleFileSelect}
+                      disabled={fileConverter.converting}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Supports documents, images, audio, video, and more
+                      {fileConverter.selectedFile ? `Selected: ${fileConverter.selectedFile.name}` : 'Supports documents, images, audio, video, and more'}
                     </p>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>Convert to</Label>
-                      <Select>
+                      <Select value={fileConverter.outputFormat} onValueChange={(value) => setFileConverter({...fileConverter, outputFormat: value})}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select format" />
                         </SelectTrigger>
@@ -1382,7 +1555,7 @@ export default function Dashboard() {
                     
                     <div>
                       <Label>Quality</Label>
-                      <Select defaultValue="medium">
+                      <Select value={fileConverter.quality} onValueChange={(value) => setFileConverter({...fileConverter, quality: value})}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -1395,10 +1568,56 @@ export default function Dashboard() {
                     </div>
                   </div>
                   
-                  <Button className="w-full">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Convert File
+                  <Button 
+                    onClick={convertFile} 
+                    className="w-full" 
+                    disabled={!fileConverter.selectedFile || !fileConverter.outputFormat || fileConverter.converting}
+                  >
+                    {fileConverter.converting ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                        Converting...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Convert File
+                      </>
+                    )}
                   </Button>
+
+                  {/* Converted Files List */}
+                  {fileConverter.convertedFiles.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Converted Files (Double-click to download):</Label>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {fileConverter.convertedFiles.map((file) => (
+                          <div
+                            key={file.id}
+                            className="flex items-center justify-between p-2 bg-muted rounded cursor-pointer hover:bg-muted/80 transition-colors"
+                            onDoubleClick={() => downloadConvertedFile(file.downloadUrl, `${file.originalName.split('.')[0]}.${file.outputFormat}`)}
+                          >
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{file.originalName}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Converted to {file.outputFormat.toUpperCase()} • {format(new Date(file.createdAt), 'MMM d, yyyy')}
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                downloadConvertedFile(file.downloadUrl, `${file.originalName.split('.')[0]}.${file.outputFormat}`);
+                              }}
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded text-sm">
                     <strong>Supported formats:</strong>
