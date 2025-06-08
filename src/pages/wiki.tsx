@@ -521,7 +521,7 @@ export default function Wiki() {
                     
                     <div className="grid md:grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <h4 className="font-semibold">Mobile (< 640px):</h4>
+                        <h4 className="font-semibold">Mobile (&lt; 640px):</h4>
                         <ul className="space-y-1 text-sm text-muted-foreground">
                           <li>• Touch-optimized interface</li>
                           <li>• Responsive navigation</li>
@@ -541,7 +541,7 @@ export default function Wiki() {
                       </div>
                       
                       <div className="space-y-2">
-                        <h4 className="font-semibold">Desktop (> 1024px):</h4>
+                        <h4 className="font-semibold">Desktop (&gt; 1024px):</h4>
                         <ul className="space-y-1 text-sm text-muted-foreground">
                           <li>• Full feature access</li>
                           <li>• Keyboard shortcuts</li>
