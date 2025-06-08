@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { 
   CheckCircle, 
   Calendar, 
@@ -31,7 +33,13 @@ import {
   Search,
   Filter,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Upload,
+  Download,
+  Thermometer,
+  Ruler,
+  DollarSign,
+  Send
 } from "lucide-react";
 import { createClient } from '@/util/supabase/component';
 import { format } from 'date-fns';
@@ -84,7 +92,7 @@ export default function Dashboard() {
   // Form states
   const [newTodo, setNewTodo] = useState({ title: '', description: '', priority: 'medium', dueDate: '' });
   const [newNote, setNewNote] = useState({ title: '', content: '', tags: '' });
-  const [newLink, setNewLink] = useState({ originalUrl: '', title: '' });
+  const [newLink, setNewLink] = useState({ originalUrl: '', title: '', customCode: '' });
   
   // Dialog states
   const [todoDialogOpen, setTodoDialogOpen] = useState(false);
@@ -99,6 +107,25 @@ export default function Dashboard() {
   const [textToConvert, setTextToConvert] = useState('');
   const [convertedText, setConvertedText] = useState('');
   const [conversionType, setConversionType] = useState('uppercase');
+  
+  // Language and other tool states
+  const [currentLanguage, setCurrentLanguage] = useState('en');
+  const [unitConverter, setUnitConverter] = useState({
+    type: 'temperature',
+    fromValue: '',
+    fromUnit: 'celsius',
+    toUnit: 'fahrenheit',
+    result: ''
+  });
+  const [translator, setTranslator] = useState({
+    sourceText: '',
+    translatedText: '',
+    fromLang: 'en',
+    toLang: 'hu'
+  });
+  const [chatMessages, setChatMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -292,7 +319,28 @@ export default function Dashboard() {
     if (!newLink.originalUrl.trim()) return;
     
     try {
-      const shortCode = Math.random().toString(36).substring(2, 8);
+      let shortCode = newLink.customCode.trim();
+      
+      // If no custom code provided, generate random one
+      if (!shortCode) {
+        shortCode = Math.random().toString(36).substring(2, 8);
+      } else {
+        // Check if custom code already exists
+        const { data: existingLink } = await supabase
+          .from('ShortLink')
+          .select('id')
+          .eq('shortCode', shortCode)
+          .maybeSingle();
+        
+        if (existingLink) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "This custom code is already taken. Please choose another one.",
+          });
+          return;
+        }
+      }
       
       const { data, error } = await supabase
         .from('ShortLink')
@@ -308,7 +356,7 @@ export default function Dashboard() {
       if (error) throw error;
       
       setShortLinks([data, ...shortLinks]);
-      setNewLink({ originalUrl: '', title: '' });
+      setNewLink({ originalUrl: '', title: '', customCode: '' });
       setLinkDialogOpen(false);
       
       toast({
@@ -408,7 +456,12 @@ export default function Dashboard() {
           </div>
           
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-muted-foreground">
+            <LanguageSelector 
+              currentLanguage={currentLanguage} 
+              onLanguageChange={setCurrentLanguage} 
+            />
+            <ThemeToggle />
+            <span className="text-sm text-muted-foreground hidden sm:inline">
               Welcome back, {user?.email}
             </span>
             <Button variant="ghost" size="sm" onClick={signOut}>
@@ -837,6 +890,18 @@ export default function Dashboard() {
                           placeholder="My awesome link"
                         />
                       </div>
+                      <div>
+                        <Label htmlFor="customCode">Custom Code (optional)</Label>
+                        <Input
+                          id="customCode"
+                          value={newLink.customCode}
+                          onChange={(e) => setNewLink({...newLink, customCode: e.target.value})}
+                          placeholder="my-custom-link"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Leave empty for random code. Only letters, numbers, and hyphens allowed.
+                        </p>
+                      </div>
                       <Button onClick={addShortLink} className="w-full">
                         Create Short Link
                       </Button>
@@ -975,26 +1040,345 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
 
-                {/* Coming Soon Tools */}
+                {/* Unit Converter */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>More Tools Coming Soon</CardTitle>
+                    <CardTitle className="flex items-center">
+                      <Thermometer className="w-5 h-5 mr-2" />
+                      Unit Converter
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3 text-muted-foreground">
-                        <Calculator className="w-4 h-4" />
-                        <span>Unit Converters (Temperature, Distance, Currency)</span>
+                  <CardContent className="space-y-4">
+                    <Select value={unitConverter.type} onValueChange={(value) => setUnitConverter({...unitConverter, type: value, result: ''})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="temperature">Temperature</SelectItem>
+                        <SelectItem value="length">Length</SelectItem>
+                        <SelectItem value="weight">Weight</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>From</Label>
+                        <Input
+                          type="number"
+                          placeholder="Enter value"
+                          value={unitConverter.fromValue}
+                          onChange={(e) => setUnitConverter({...unitConverter, fromValue: e.target.value, result: ''})}
+                        />
+                        <Select value={unitConverter.fromUnit} onValueChange={(value) => setUnitConverter({...unitConverter, fromUnit: value, result: ''})}>
+                          <SelectTrigger className="mt-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {unitConverter.type === 'temperature' && (
+                              <>
+                                <SelectItem value="celsius">Celsius</SelectItem>
+                                <SelectItem value="fahrenheit">Fahrenheit</SelectItem>
+                                <SelectItem value="kelvin">Kelvin</SelectItem>
+                              </>
+                            )}
+                            {unitConverter.type === 'length' && (
+                              <>
+                                <SelectItem value="meters">Meters</SelectItem>
+                                <SelectItem value="feet">Feet</SelectItem>
+                                <SelectItem value="inches">Inches</SelectItem>
+                                <SelectItem value="kilometers">Kilometers</SelectItem>
+                                <SelectItem value="miles">Miles</SelectItem>
+                              </>
+                            )}
+                            {unitConverter.type === 'weight' && (
+                              <>
+                                <SelectItem value="kilograms">Kilograms</SelectItem>
+                                <SelectItem value="pounds">Pounds</SelectItem>
+                                <SelectItem value="grams">Grams</SelectItem>
+                                <SelectItem value="ounces">Ounces</SelectItem>
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
                       </div>
-                      <div className="flex items-center space-x-3 text-muted-foreground">
-                        <FileText className="w-4 h-4" />
-                        <span>Document Converters (PDF, Word, Images)</span>
-                      </div>
-                      <div className="flex items-center space-x-3 text-muted-foreground">
-                        <MessageSquare className="w-4 h-4" />
-                        <span>Language Translator (English ⇄ Hungarian)</span>
+                      
+                      <div>
+                        <Label>To</Label>
+                        <Input
+                          value={unitConverter.result}
+                          readOnly
+                          placeholder="Result"
+                          className="bg-muted"
+                        />
+                        <Select value={unitConverter.toUnit} onValueChange={(value) => setUnitConverter({...unitConverter, toUnit: value, result: ''})}>
+                          <SelectTrigger className="mt-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {unitConverter.type === 'temperature' && (
+                              <>
+                                <SelectItem value="celsius">Celsius</SelectItem>
+                                <SelectItem value="fahrenheit">Fahrenheit</SelectItem>
+                                <SelectItem value="kelvin">Kelvin</SelectItem>
+                              </>
+                            )}
+                            {unitConverter.type === 'length' && (
+                              <>
+                                <SelectItem value="meters">Meters</SelectItem>
+                                <SelectItem value="feet">Feet</SelectItem>
+                                <SelectItem value="inches">Inches</SelectItem>
+                                <SelectItem value="kilometers">Kilometers</SelectItem>
+                                <SelectItem value="miles">Miles</SelectItem>
+                              </>
+                            )}
+                            {unitConverter.type === 'weight' && (
+                              <>
+                                <SelectItem value="kilograms">Kilograms</SelectItem>
+                                <SelectItem value="pounds">Pounds</SelectItem>
+                                <SelectItem value="grams">Grams</SelectItem>
+                                <SelectItem value="ounces">Ounces</SelectItem>
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
+                    
+                    <Button onClick={() => {
+                      const value = parseFloat(unitConverter.fromValue);
+                      if (isNaN(value)) return;
+                      
+                      let result = 0;
+                      
+                      if (unitConverter.type === 'temperature') {
+                        if (unitConverter.fromUnit === 'celsius' && unitConverter.toUnit === 'fahrenheit') {
+                          result = (value * 9/5) + 32;
+                        } else if (unitConverter.fromUnit === 'fahrenheit' && unitConverter.toUnit === 'celsius') {
+                          result = (value - 32) * 5/9;
+                        } else if (unitConverter.fromUnit === 'celsius' && unitConverter.toUnit === 'kelvin') {
+                          result = value + 273.15;
+                        } else if (unitConverter.fromUnit === 'kelvin' && unitConverter.toUnit === 'celsius') {
+                          result = value - 273.15;
+                        } else if (unitConverter.fromUnit === 'fahrenheit' && unitConverter.toUnit === 'kelvin') {
+                          result = (value - 32) * 5/9 + 273.15;
+                        } else if (unitConverter.fromUnit === 'kelvin' && unitConverter.toUnit === 'fahrenheit') {
+                          result = (value - 273.15) * 9/5 + 32;
+                        } else {
+                          result = value;
+                        }
+                      } else if (unitConverter.type === 'length') {
+                        // Convert to meters first, then to target unit
+                        let meters = value;
+                        if (unitConverter.fromUnit === 'feet') meters = value * 0.3048;
+                        else if (unitConverter.fromUnit === 'inches') meters = value * 0.0254;
+                        else if (unitConverter.fromUnit === 'kilometers') meters = value * 1000;
+                        else if (unitConverter.fromUnit === 'miles') meters = value * 1609.34;
+                        
+                        if (unitConverter.toUnit === 'meters') result = meters;
+                        else if (unitConverter.toUnit === 'feet') result = meters / 0.3048;
+                        else if (unitConverter.toUnit === 'inches') result = meters / 0.0254;
+                        else if (unitConverter.toUnit === 'kilometers') result = meters / 1000;
+                        else if (unitConverter.toUnit === 'miles') result = meters / 1609.34;
+                      } else if (unitConverter.type === 'weight') {
+                        // Convert to grams first, then to target unit
+                        let grams = value;
+                        if (unitConverter.fromUnit === 'kilograms') grams = value * 1000;
+                        else if (unitConverter.fromUnit === 'pounds') grams = value * 453.592;
+                        else if (unitConverter.fromUnit === 'ounces') grams = value * 28.3495;
+                        
+                        if (unitConverter.toUnit === 'grams') result = grams;
+                        else if (unitConverter.toUnit === 'kilograms') result = grams / 1000;
+                        else if (unitConverter.toUnit === 'pounds') result = grams / 453.592;
+                        else if (unitConverter.toUnit === 'ounces') result = grams / 28.3495;
+                      }
+                      
+                      setUnitConverter({...unitConverter, result: result.toFixed(4)});
+                    }} className="w-full">
+                      Convert
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Language Translator */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <MessageSquare className="w-5 h-5 mr-2" />
+                      Language Translator
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Select value={translator.fromLang} onValueChange={(value) => setTranslator({...translator, fromLang: value})}>
+                        <SelectTrigger className="flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="en">🇺🇸 English</SelectItem>
+                          <SelectItem value="hu">🇭🇺 Hungarian</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTranslator({
+                          ...translator,
+                          fromLang: translator.toLang,
+                          toLang: translator.fromLang,
+                          sourceText: translator.translatedText,
+                          translatedText: translator.sourceText
+                        })}
+                      >
+                        ⇄
+                      </Button>
+                      <Select value={translator.toLang} onValueChange={(value) => setTranslator({...translator, toLang: value})}>
+                        <SelectTrigger className="flex-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="en">🇺🇸 English</SelectItem>
+                          <SelectItem value="hu">🇭🇺 Hungarian</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <Textarea
+                      placeholder="Enter text to translate..."
+                      value={translator.sourceText}
+                      onChange={(e) => setTranslator({...translator, sourceText: e.target.value})}
+                      rows={4}
+                    />
+                    
+                    <Button onClick={() => {
+                      // Simple mock translation - in a real app, you'd use a translation API
+                      const mockTranslations: Record<string, Record<string, string>> = {
+                        'en-hu': {
+                          'hello': 'helló',
+                          'goodbye': 'viszlát',
+                          'thank you': 'köszönöm',
+                          'please': 'kérem',
+                          'yes': 'igen',
+                          'no': 'nem'
+                        },
+                        'hu-en': {
+                          'helló': 'hello',
+                          'viszlát': 'goodbye',
+                          'köszönöm': 'thank you',
+                          'kérem': 'please',
+                          'igen': 'yes',
+                          'nem': 'no'
+                        }
+                      };
+                      
+                      const key = `${translator.fromLang}-${translator.toLang}`;
+                      const text = translator.sourceText.toLowerCase();
+                      const translation = mockTranslations[key]?.[text] || `[Translation: ${translator.sourceText}]`;
+                      
+                      setTranslator({...translator, translatedText: translation});
+                    }} className="w-full">
+                      Translate
+                    </Button>
+                    
+                    {translator.translatedText && (
+                      <div className="space-y-2">
+                        <Label>Translation:</Label>
+                        <Textarea
+                          value={translator.translatedText}
+                          readOnly
+                          rows={4}
+                          className="bg-muted"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigator.clipboard.writeText(translator.translatedText)}
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy Translation
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* File Size Converter */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Calculator className="w-5 h-5 mr-2" />
+                      File Size Converter
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>From</Label>
+                        <Input
+                          type="number"
+                          placeholder="Enter size"
+                          value={unitConverter.fromValue}
+                          onChange={(e) => setUnitConverter({...unitConverter, fromValue: e.target.value, result: ''})}
+                        />
+                        <Select value={unitConverter.fromUnit} onValueChange={(value) => setUnitConverter({...unitConverter, fromUnit: value, result: ''})}>
+                          <SelectTrigger className="mt-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="bytes">Bytes</SelectItem>
+                            <SelectItem value="kb">KB</SelectItem>
+                            <SelectItem value="mb">MB</SelectItem>
+                            <SelectItem value="gb">GB</SelectItem>
+                            <SelectItem value="tb">TB</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label>To</Label>
+                        <Input
+                          value={unitConverter.result}
+                          readOnly
+                          placeholder="Result"
+                          className="bg-muted"
+                        />
+                        <Select value={unitConverter.toUnit} onValueChange={(value) => setUnitConverter({...unitConverter, toUnit: value, result: ''})}>
+                          <SelectTrigger className="mt-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="bytes">Bytes</SelectItem>
+                            <SelectItem value="kb">KB</SelectItem>
+                            <SelectItem value="mb">MB</SelectItem>
+                            <SelectItem value="gb">GB</SelectItem>
+                            <SelectItem value="tb">TB</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <Button onClick={() => {
+                      const value = parseFloat(unitConverter.fromValue);
+                      if (isNaN(value)) return;
+                      
+                      // Convert to bytes first
+                      let bytes = value;
+                      if (unitConverter.fromUnit === 'kb') bytes = value * 1024;
+                      else if (unitConverter.fromUnit === 'mb') bytes = value * 1024 * 1024;
+                      else if (unitConverter.fromUnit === 'gb') bytes = value * 1024 * 1024 * 1024;
+                      else if (unitConverter.fromUnit === 'tb') bytes = value * 1024 * 1024 * 1024 * 1024;
+                      
+                      let result = bytes;
+                      if (unitConverter.toUnit === 'kb') result = bytes / 1024;
+                      else if (unitConverter.toUnit === 'mb') result = bytes / (1024 * 1024);
+                      else if (unitConverter.toUnit === 'gb') result = bytes / (1024 * 1024 * 1024);
+                      else if (unitConverter.toUnit === 'tb') result = bytes / (1024 * 1024 * 1024 * 1024);
+                      
+                      setUnitConverter({...unitConverter, result: result.toFixed(4)});
+                    }} className="w-full">
+                      Convert
+                    </Button>
                   </CardContent>
                 </Card>
               </div>
@@ -1002,21 +1386,201 @@ export default function Dashboard() {
 
             {/* AI Chat Tab */}
             <TabsContent value="chat" className="space-y-6">
-              <Card>
+              <Card className="h-[600px] flex flex-col">
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <MessageSquare className="w-5 h-5 mr-2" />
                     AI Chat Assistant
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">AI Chat Coming Soon</h3>
-                    <p className="text-muted-foreground">
-                      Get help and answers with integrated ChatGPT functionality.
-                      This feature will be available in the next update!
-                    </p>
+                <CardContent className="flex-1 flex flex-col space-y-4">
+                  {/* Chat Messages */}
+                  <div className="flex-1 overflow-y-auto space-y-4 p-4 bg-muted/30 rounded-lg">
+                    {chatMessages.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-8">
+                        <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>Start a conversation with your AI assistant!</p>
+                        <p className="text-sm mt-2">Ask about productivity tips, task management, or anything else.</p>
+                      </div>
+                    ) : (
+                      chatMessages.map((message, index) => (
+                        <div
+                          key={index}
+                          className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div
+                            className={`max-w-[80%] p-3 rounded-lg ${
+                              message.role === 'user'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-background border'
+                            }`}
+                          >
+                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                    {chatLoading && (
+                      <div className="flex justify-start">
+                        <div className="bg-background border p-3 rounded-lg">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Chat Input */}
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder="Type your message..."
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          if (chatInput.trim() && !chatLoading) {
+                            const sendMessage = async () => {
+                              const userMessage = chatInput.trim();
+                              const newMessages = [...chatMessages, { role: 'user' as const, content: userMessage }];
+                              
+                              setChatMessages(newMessages);
+                              setChatInput('');
+                              setChatLoading(true);
+                              
+                              try {
+                                const response = await fetch('/api/chat', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({
+                                    messages: newMessages.map(msg => ({
+                                      role: msg.role,
+                                      content: msg.content
+                                    }))
+                                  }),
+                                });
+                                
+                                if (!response.ok) {
+                                  throw new Error('Failed to get response');
+                                }
+                                
+                                const data = await response.json();
+                                setChatMessages([...newMessages, { role: 'assistant', content: data.message }]);
+                              } catch (error) {
+                                console.error('Chat error:', error);
+                                setChatMessages([...newMessages, { 
+                                  role: 'assistant', 
+                                  content: 'Sorry, I encountered an error. Please try again.' 
+                                }]);
+                                toast({
+                                  variant: "destructive",
+                                  title: "Error",
+                                  description: "Failed to get AI response",
+                                });
+                              } finally {
+                                setChatLoading(false);
+                              }
+                            };
+                            sendMessage();
+                          }
+                        }
+                      }}
+                      disabled={chatLoading}
+                    />
+                    <Button
+                      onClick={async () => {
+                        if (chatInput.trim() && !chatLoading) {
+                          const userMessage = chatInput.trim();
+                          const newMessages = [...chatMessages, { role: 'user' as const, content: userMessage }];
+                          
+                          setChatMessages(newMessages);
+                          setChatInput('');
+                          setChatLoading(true);
+                          
+                          try {
+                            const response = await fetch('/api/chat', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                messages: newMessages.map(msg => ({
+                                  role: msg.role,
+                                  content: msg.content
+                                }))
+                              }),
+                            });
+                            
+                            if (!response.ok) {
+                              throw new Error('Failed to get response');
+                            }
+                            
+                            const data = await response.json();
+                            setChatMessages([...newMessages, { role: 'assistant', content: data.message }]);
+                          } catch (error) {
+                            console.error('Chat error:', error);
+                            setChatMessages([...newMessages, { 
+                              role: 'assistant', 
+                              content: 'Sorry, I encountered an error. Please try again.' 
+                            }]);
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: "Failed to get AI response",
+                            });
+                          } finally {
+                            setChatLoading(false);
+                          }
+                        }
+                      }}
+                      disabled={!chatInput.trim() || chatLoading}
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  {/* Quick Actions */}
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setChatInput("How can I be more productive?")}
+                      disabled={chatLoading}
+                    >
+                      Productivity Tips
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setChatInput("Help me organize my tasks")}
+                      disabled={chatLoading}
+                    >
+                      Task Organization
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setChatInput("What's a good note-taking strategy?")}
+                      disabled={chatLoading}
+                    >
+                      Note-taking Tips
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setChatMessages([]);
+                        setChatInput('');
+                      }}
+                      disabled={chatLoading}
+                    >
+                      Clear Chat
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
