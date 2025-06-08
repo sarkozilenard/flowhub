@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@/util/supabase/api';
 import prisma from '@/lib/prisma';
+import QRCode from 'qrcode';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -63,7 +64,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         });
 
-        return res.status(201).json(newShortLink);
+        // Generate QR code for the short link
+        const shortUrl = `${req.headers.origin || 'https://your-domain.com'}/s/${shortCode}`;
+        try {
+          const qrCodeData = await QRCode.toDataURL(shortUrl, {
+            width: 200,
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF'
+            }
+          });
+
+          // Save QR code to database
+          await prisma.qRCode.create({
+            data: {
+              content: shortUrl,
+              title: `QR Code for ${title || shortCode}`,
+              foregroundColor: '#000000',
+              backgroundColor: '#FFFFFF',
+              size: 200,
+              format: 'PNG',
+              userId: user.id
+            }
+          });
+        } catch (qrError) {
+          console.error('QR code generation error:', qrError);
+          // Don't fail the short link creation if QR code fails
+        }
+
+        return res.status(201).json({
+          ...newShortLink,
+          shortUrl
+        });
 
       default:
         return res.status(405).json({ error: 'Method not allowed' });

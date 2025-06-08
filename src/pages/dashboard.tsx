@@ -752,7 +752,7 @@ export default function Dashboard() {
           <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
             {/* Mobile-optimized tabs */}
             <div className="w-full">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 xl:grid-cols-9 gap-1 h-auto p-1">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12 gap-1 h-auto p-1">
                 <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
                   <span className="hidden sm:inline">{t('nav.overview')}</span>
                   <span className="sm:hidden">Overview</span>
@@ -768,6 +768,18 @@ export default function Dashboard() {
                 <TabsTrigger value="links" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
                   <span className="hidden sm:inline">{t('nav.links')}</span>
                   <span className="sm:hidden">Links</span>
+                </TabsTrigger>
+                <TabsTrigger value="email" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
+                  <span className="hidden sm:inline">Email</span>
+                  <span className="sm:hidden">Mail</span>
+                </TabsTrigger>
+                <TabsTrigger value="qr" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
+                  <span className="hidden sm:inline">QR Codes</span>
+                  <span className="sm:hidden">QR</span>
+                </TabsTrigger>
+                <TabsTrigger value="youtube" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
+                  <span className="hidden sm:inline">YouTube</span>
+                  <span className="sm:hidden">YT</span>
                 </TabsTrigger>
                 <TabsTrigger value="tools" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
                   <span className="hidden sm:inline">{t('nav.tools')}</span>
@@ -1288,6 +1300,300 @@ export default function Dashboard() {
                   </Card>
                 )}
               </div>
+            </TabsContent>
+
+            {/* Email Tab */}
+            <TabsContent value="email" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Email Client</h2>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Email Account
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Email Account</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="emailAddress">Email Address</Label>
+                        <Input
+                          id="emailAddress"
+                          type="email"
+                          placeholder="your.email@example.com"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="emailProvider">Provider</Label>
+                        <Select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select email provider" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="gmail">Gmail</SelectItem>
+                            <SelectItem value="outlook">Outlook</SelectItem>
+                            <SelectItem value="imap">IMAP/SMTP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                        <h4 className="font-medium mb-2">Setup Instructions:</h4>
+                        <ul className="text-sm space-y-1">
+                          <li>• <strong>Gmail:</strong> Enable 2FA and create an App Password</li>
+                          <li>• <strong>Outlook:</strong> Use OAuth authentication</li>
+                          <li>• <strong>IMAP:</strong> Enter server settings manually</li>
+                        </ul>
+                      </div>
+                      <Button className="w-full">
+                        Add Account
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No email accounts configured</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Add your first email account to start managing emails directly from FlowHub!
+                  </p>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add First Email Account
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* QR Codes Tab */}
+            <TabsContent value="qr" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">QR Code Generator</h2>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Generate QR Code
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Generate QR Code</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="qrContent">Content</Label>
+                        <Textarea
+                          id="qrContent"
+                          placeholder="Enter URL, text, or any content..."
+                          rows={3}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="qrTitle">Title (optional)</Label>
+                        <Input
+                          id="qrTitle"
+                          placeholder="QR Code title"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="qrForeground">Foreground Color</Label>
+                          <Input
+                            id="qrForeground"
+                            type="color"
+                            defaultValue="#000000"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="qrBackground">Background Color</Label>
+                          <Input
+                            id="qrBackground"
+                            type="color"
+                            defaultValue="#FFFFFF"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="qrSize">Size</Label>
+                          <Select defaultValue="200">
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="100">100x100</SelectItem>
+                              <SelectItem value="200">200x200</SelectItem>
+                              <SelectItem value="300">300x300</SelectItem>
+                              <SelectItem value="500">500x500</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="qrFormat">Format</Label>
+                          <Select defaultValue="PNG">
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="PNG">PNG</SelectItem>
+                              <SelectItem value="SVG">SVG</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <Button className="w-full">
+                        Generate QR Code
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4">
+                      <div className="w-8 h-8 bg-foreground rounded-sm"></div>
+                    </div>
+                    <h3 className="text-lg font-medium mb-2">No QR codes yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Generate your first QR code for links, text, or any content!
+                    </p>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Generate First QR Code
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>QR Code Features</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <h4 className="font-semibold">Automatic Generation</h4>
+                      <p className="text-sm text-muted-foreground">
+                        QR codes are automatically generated for all your short links
+                      </p>
+                    </div>
+                    <div className="space-y-3">
+                      <h4 className="font-semibold">Custom QR Codes</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Create QR codes for any content with custom colors and sizes
+                      </p>
+                    </div>
+                    <div className="space-y-3">
+                      <h4 className="font-semibold">Multiple Formats</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Download as PNG for images or SVG for scalable graphics
+                      </p>
+                    </div>
+                    <div className="space-y-3">
+                      <h4 className="font-semibold">Easy Sharing</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Perfect for business cards, posters, or digital sharing
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* YouTube Downloader Tab */}
+            <TabsContent value="youtube" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">YouTube Downloader</h2>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Download className="w-5 h-5 mr-2" />
+                    Download YouTube Videos & Playlists
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="youtubeUrl">YouTube URL</Label>
+                    <Input
+                      id="youtubeUrl"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Supports individual videos and playlists
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="downloadFormat">Format</Label>
+                      <Select defaultValue="mp4">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="mp4">MP4 (Video)</SelectItem>
+                          <SelectItem value="mp3">MP3 (Audio)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="downloadQuality">Quality</Label>
+                      <Select defaultValue="highest">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="highest">Highest</SelectItem>
+                          <SelectItem value="720p">720p</SelectItem>
+                          <SelectItem value="480p">480p</SelectItem>
+                          <SelectItem value="360p">360p</SelectItem>
+                          <SelectItem value="lowest">Lowest</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <Button className="w-full">
+                    <Download className="w-4 h-4 mr-2" />
+                    Process Video
+                  </Button>
+                  
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
+                    <h4 className="font-medium mb-2 text-yellow-800 dark:text-yellow-200">Important Notice:</h4>
+                    <ul className="text-sm space-y-1 text-yellow-700 dark:text-yellow-300">
+                      <li>• Only download content you have permission to use</li>
+                      <li>• Respect copyright laws and YouTube's Terms of Service</li>
+                      <li>• This tool is for personal use and educational purposes</li>
+                      <li>• Large files may take time to process</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Download History</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Download className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No downloads yet</h3>
+                    <p className="text-muted-foreground">
+                      Your download history will appear here once you start downloading videos.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Tools Tab */}

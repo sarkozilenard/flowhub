@@ -23,7 +23,6 @@ interface AuthContextType {
   signUp: (email: string, password: string, username: string) => Promise<void>;
   signInWithMagicLink: (email: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (data: { name?: string; username?: string }) => Promise<void>;
@@ -38,7 +37,6 @@ export const AuthContext = createContext<AuthContextType>({
   signUp: async () => {},
   signInWithMagicLink: async () => {},
   signInWithGoogle: async () => {},
-  signInWithApple: async () => {},
   signOut: async () => {},
   resetPassword: async () => {},
   updateProfile: async () => {},
@@ -267,23 +265,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const signInWithApple = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'apple' as Provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    });
-    
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-      throw error;
-    }
-  };
+
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -363,7 +345,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       signUp,
       signInWithMagicLink,
       signInWithGoogle,
-      signInWithApple,
       signOut,
       resetPassword,
       updateProfile,

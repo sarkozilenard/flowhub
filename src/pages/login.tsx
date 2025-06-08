@@ -3,7 +3,7 @@ import React, { useContext, useState, useEffect } from 'react';
 import * as Yup from 'yup';
 import { useRouter } from 'next/navigation';
 import { AuthContext } from '@/contexts/AuthContext';
-import { FaEye, FaEyeSlash, FaApple } from 'react-icons/fa';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import GoogleButton from '@/components/GoogleButton';
 import Logo from '@/components/Logo';
 import { useToast } from "@/components/ui/use-toast";
@@ -17,7 +17,7 @@ import { useIsIFrame } from '@/hooks/useIsIFrame';
 
 const LoginPage = () => {
   const router = useRouter();
-  const { initializing, signIn, signInWithApple } = useContext(AuthContext);
+  const { initializing, signIn } = useContext(AuthContext);
   const [showPw, setShowPw] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -43,18 +43,7 @@ const LoginPage = () => {
     }
   }
 
-  const handleAppleLogin = async () => {
-    try {
-      await signInWithApple();
-    } catch (error) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Apple login failed",
-        description: "Please try again.",
-      });
-    }
-  };
+
 
   const validationSchema = Yup.object().shape({
     email: Yup.string().required("Email or username is required"),
@@ -95,14 +84,6 @@ const LoginPage = () => {
             <CardContent className="space-y-4">
               <div className="flex flex-col gap-3">
                 <GoogleButton />
-                <Button
-                  onClick={handleAppleLogin}
-                  variant="outline"
-                  className="w-full bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
-                >
-                  <FaApple className="w-4 h-4 mr-2" />
-                  Continue with Apple
-                </Button>
                 <Button
                   onClick={(e) => {
                     e.preventDefault();
