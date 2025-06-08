@@ -246,6 +246,44 @@ export default function Dashboard() {
     }
   };
 
+  const deleteQrCode = async (id: string) => {
+    try {
+      const response = await fetch('/api/qr', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+
+      if (response.ok) {
+        setQrCodes(qrCodes.filter(qr => qr.id !== id));
+        toast({
+          title: t('message.success'),
+          description: "QR code deleted successfully",
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete QR code');
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: t('message.error'),
+        description: error.message || "Failed to delete QR code",
+      });
+    }
+  };
+
+  const downloadQrCode = (qr: any) => {
+    if (!qr.qrCodeData) return;
+    
+    const link = document.createElement('a');
+    link.href = qr.qrCodeData;
+    link.download = `${qr.title || 'qr-code'}.${qr.format.toLowerCase()}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const generateQrCode = async () => {
     if (!qrForm.content.trim()) {
       toast({
@@ -1604,6 +1642,115 @@ export default function Dashboard() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Email Setup Guide */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Email Setup & Usage Guide</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg">
+                      <h4 className="font-medium mb-2 text-yellow-800 dark:text-yellow-200">⚠️ Current Status</h4>
+                      <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                        The email client is currently in development. Basic account management is available, but full email reading/sending functionality requires additional setup and configuration.
+                      </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h4 className="font-semibold">How to Read Emails</h4>
+                        <div className="space-y-3 text-sm">
+                          <div className="border-l-4 border-blue-500 pl-4">
+                            <h5 className="font-medium">1. Add Email Account</h5>
+                            <p className="text-muted-foreground">
+                              Click "Add Email Account" and configure your email provider settings.
+                            </p>
+                          </div>
+                          <div className="border-l-4 border-green-500 pl-4">
+                            <h5 className="font-medium">2. Configure IMAP/OAuth</h5>
+                            <p className="text-muted-foreground">
+                              For Gmail: Enable 2FA and create an App Password. For others: Use IMAP settings.
+                            </p>
+                          </div>
+                          <div className="border-l-4 border-purple-500 pl-4">
+                            <h5 className="font-medium">3. Sync Emails</h5>
+                            <p className="text-muted-foreground">
+                              Once configured, emails will be synced and displayed in your inbox.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="font-semibold">How to Send Emails</h4>
+                        <div className="space-y-3 text-sm">
+                          <div className="border-l-4 border-orange-500 pl-4">
+                            <h5 className="font-medium">1. Configure SMTP</h5>
+                            <p className="text-muted-foreground">
+                              SMTP settings are required for sending emails through FlowHub.
+                            </p>
+                          </div>
+                          <div className="border-l-4 border-red-500 pl-4">
+                            <h5 className="font-medium">2. Compose Interface</h5>
+                            <p className="text-muted-foreground">
+                              Use the built-in compose interface to write and send emails.
+                            </p>
+                          </div>
+                          <div className="border-l-4 border-teal-500 pl-4">
+                            <h5 className="font-medium">3. Email Management</h5>
+                            <p className="text-muted-foreground">
+                              Organize emails with folders, labels, and search functionality.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="font-semibold">Provider-Specific Setup</h4>
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div className="p-4 border rounded-lg">
+                          <h5 className="font-medium mb-2">Gmail Setup</h5>
+                          <ul className="text-sm space-y-1 text-muted-foreground">
+                            <li>• Enable 2-Factor Authentication</li>
+                            <li>• Generate App Password</li>
+                            <li>• Use IMAP: imap.gmail.com:993</li>
+                            <li>• Use SMTP: smtp.gmail.com:587</li>
+                          </ul>
+                        </div>
+                        <div className="p-4 border rounded-lg">
+                          <h5 className="font-medium mb-2">Outlook Setup</h5>
+                          <ul className="text-sm space-y-1 text-muted-foreground">
+                            <li>• Use OAuth2 authentication</li>
+                            <li>• IMAP: outlook.office365.com:993</li>
+                            <li>• SMTP: smtp-mail.outlook.com:587</li>
+                            <li>• Enable modern authentication</li>
+                          </ul>
+                        </div>
+                        <div className="p-4 border rounded-lg">
+                          <h5 className="font-medium mb-2">Custom IMAP</h5>
+                          <ul className="text-sm space-y-1 text-muted-foreground">
+                            <li>• Get IMAP/SMTP settings from provider</li>
+                            <li>• Configure ports and security</li>
+                            <li>• Test connection settings</li>
+                            <li>• Enable less secure apps if needed</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                      <h4 className="font-medium mb-2 text-blue-800 dark:text-blue-200">💡 Development Note</h4>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        Full email functionality requires implementing IMAP/SMTP clients, OAuth flows, and email parsing. 
+                        The current implementation provides the database structure and basic account management. 
+                        For immediate email needs, consider using your regular email client alongside FlowHub.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* QR Codes Tab */}
@@ -1716,12 +1863,35 @@ export default function Dashboard() {
                               )
                             )}
                           </div>
-                          <div>
-                            <h3 className="font-medium">{qr.title || 'QR Code'}</h3>
-                            <p className="text-sm text-muted-foreground truncate">{qr.content}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {qr.size}x{qr.size} • {qr.format}
-                            </p>
+                          <div className="space-y-2">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h3 className="font-medium">{qr.title || 'QR Code'}</h3>
+                                <p className="text-sm text-muted-foreground truncate">{qr.content}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {qr.size}x{qr.size} • {qr.format}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => downloadQrCode(qr)}
+                                className="flex-1"
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                Download
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => deleteQrCode(qr.id)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
