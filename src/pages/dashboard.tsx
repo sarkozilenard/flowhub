@@ -129,6 +129,10 @@ export default function Dashboard() {
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
 
+  // Admin states
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [adminLoading, setAdminLoading] = useState(false);
+
   useEffect(() => {
     if (user) {
       fetchData();
@@ -369,6 +373,61 @@ export default function Dashboard() {
     }
   };
 
+  // Admin functions
+  const fetchAllUsers = async () => {
+    if (!userProfile?.isAdmin) return;
+    
+    try {
+      setAdminLoading(true);
+      const response = await fetch('/api/admin/users');
+      if (response.ok) {
+        const users = await response.json();
+        setAllUsers(users);
+      } else {
+        throw new Error('Failed to fetch users');
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch users",
+      });
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const toggleUserAdmin = async (userId: string, isAdmin: boolean) => {
+    try {
+      const response = await fetch('/api/admin/promote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, isAdmin: !isAdmin })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAllUsers(allUsers.map(user => 
+          user.id === userId ? { ...user, isAdmin: !isAdmin } : user
+        ));
+        
+        toast({
+          title: "Success",
+          description: data.message,
+        });
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error);
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update user",
+      });
+    }
+  };
+
   // Text converter function
   const convertText = () => {
     let result = textToConvert;
@@ -520,13 +579,19 @@ export default function Dashboard() {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className={`grid w-full ${userProfile?.isAdmin ? 'grid-cols-7' : 'grid-cols-6'}`}>
               <TabsTrigger value="overview">{t('nav.overview')}</TabsTrigger>
               <TabsTrigger value="todos">{t('nav.todos')}</TabsTrigger>
               <TabsTrigger value="notes">{t('nav.notes')}</TabsTrigger>
               <TabsTrigger value="links">{t('nav.links')}</TabsTrigger>
               <TabsTrigger value="tools">{t('nav.tools')}</TabsTrigger>
               <TabsTrigger value="chat">{t('nav.chat')}</TabsTrigger>
+              {userProfile?.isAdmin && (
+                <TabsTrigger value="admin">
+                  <Shield className="w-4 h-4 mr-1" />
+                  Admin
+                </TabsTrigger>
+              )}
             </TabsList>
 
             {/* Overview Tab */}
@@ -1284,32 +1349,42 @@ export default function Dashboard() {
                       rows={4}
                     />
                     
-                    <Button onClick={() => {
-                      // Simple mock translation - in a real app, you'd use a translation API
-                      const mockTranslations: Record<string, Record<string, string>> = {
-                        'en-hu': {
-                          'hello': 'helló',
-                          'goodbye': 'viszlát',
-                          'thank you': 'köszönöm',
-                          'please': 'kérem',
-                          'yes': 'igen',
-                          'no': 'nem'
-                        },
-                        'hu-en': {
-                          'helló': 'hello',
-                          'viszlát': 'goodbye',
-                          'köszönöm': 'thank you',
-                          'kérem': 'please',
-                          'igen': 'yes',
-                          'nem': 'no'
+                    <Button onClick={async () => {
+                      if (!translator.sourceText.trim()) return;
+                      
+                      try {
+                        const response = await fetch('/api/translate', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            text: translator.sourceText,
+                            from: translator.fromLang,
+                            to: translator.toLang
+                          })
+                        });
+                        
+                        if (response.ok) {
+                          const data = await response.json();
+                          setTranslator({...translator, translatedText: data.translatedText});
+                          
+                          if (data.fallback) {
+                            toast({
+                              title: "Translation",
+                              description: "Using offline translation. For better results, try again later.",
+                            });
+                          }
+                        } else {
+                          throw new Error('Translation failed');
                         }
-                      };
-                      
-                      const key = `${translator.fromLang}-${translator.toLang}`;
-                      const text = translator.sourceText.toLowerCase();
-                      const translation = mockTranslations[key]?.[text] || `[Translation: ${translator.sourceText}]`;
-                      
-                      setTranslator({...translator, translatedText: translation});
+                      } catch (error) {
+                        toast({
+                          variant: "destructive",
+                          title: t('message.error'),
+                          description: "Translation failed. Please try again.",
+                        });
+                      }
                     }} className="w-full">
                       Translate
                     </Button>
@@ -1619,6 +1694,165 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Admin Tab */}
+            {userProfile?.isAdmin && (
+              <TabsContent value="admin" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold">Admin Panel</h2>
+                  <Button onClick={fetchAllUsers} disabled={adminLoading}>
+                    {adminLoading ? 'Loading...' : 'Refresh Users'}
+                  </Button>
+                </div>
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                      <User className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{allUsers.length}</div>
+                      <p className="text-xs text-muted-foreground">
+                        {allUsers.filter(u => u.isAdmin).length} admins
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+                      <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{allUsers.filter(u => !u.isAdmin).length}</div>
+                      <p className="text-xs text-muted-foreground">
+                        Regular users
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">System Status</CardTitle>
+                      <Zap className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-green-600">Online</div>
+                      <p className="text-xs text-muted-foreground">
+                        All systems operational
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Features</CardTitle>
+                      <Settings className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">6</div>
+                      <p className="text-xs text-muted-foreground">
+                        Active modules
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>User Management</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {allUsers.length === 0 ? (
+                      <div className="text-center py-8">
+                        <User className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                        <p className="text-muted-foreground">No users loaded. Click "Refresh Users" to load user data.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {allUsers.map((user) => (
+                          <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                                  <User className="w-5 h-5 text-primary-foreground" />
+                                </div>
+                                <div>
+                                  <h3 className="font-medium">
+                                    {user.name || user.username || 'Unnamed User'}
+                                  </h3>
+                                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                                  {user.username && (
+                                    <p className="text-xs text-muted-foreground">@{user.username}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center space-x-4">
+                              <div className="text-right">
+                                <p className="text-sm">
+                                  Joined {format(new Date(user.createdAt), 'MMM d, yyyy')}
+                                </p>
+                                <div className="flex items-center space-x-2 mt-1">
+                                  {user.isAdmin ? (
+                                    <Badge variant="default" className="bg-primary">
+                                      <Shield className="w-3 h-3 mr-1" />
+                                      Admin
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="secondary">User</Badge>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {user.id !== userProfile?.id && (
+                                <Button
+                                  variant={user.isAdmin ? "destructive" : "default"}
+                                  size="sm"
+                                  onClick={() => toggleUserAdmin(user.id, user.isAdmin)}
+                                >
+                                  {user.isAdmin ? 'Remove Admin' : 'Make Admin'}
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Admin Setup Instructions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-muted rounded-lg">
+                        <h4 className="font-medium mb-2">Setting up the first admin user:</h4>
+                        <ol className="list-decimal list-inside space-y-2 text-sm">
+                          <li>Make sure the user has signed up and created an account</li>
+                          <li>Use the admin setup API endpoint: <code className="bg-background px-2 py-1 rounded">/api/admin/setup</code></li>
+                          <li>Send a POST request with the user's email or username</li>
+                          <li>Example: <code className="bg-background px-2 py-1 rounded">{"{ \"email\": \"admin@example.com\" }"}</code></li>
+                        </ol>
+                      </div>
+                      
+                      <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                        <h4 className="font-medium mb-2 text-blue-800 dark:text-blue-200">API Endpoint Details:</h4>
+                        <div className="text-sm space-y-1">
+                          <p><strong>URL:</strong> <code className="bg-background px-2 py-1 rounded">{window.location.origin}/api/admin/setup</code></p>
+                          <p><strong>Method:</strong> POST</p>
+                          <p><strong>Body:</strong> <code className="bg-background px-2 py-1 rounded">{"{ \"email\": \"user@example.com\" }"}</code> or <code className="bg-background px-2 py-1 rounded">{"{ \"username\": \"username\" }"}</code></p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
           </Tabs>
         </motion.div>
       </main>
