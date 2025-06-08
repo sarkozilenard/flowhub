@@ -1,5 +1,5 @@
 import { GetServerSideProps } from 'next';
-import { createClient } from '@/util/supabase/api';
+import { createClient } from '@/util/supabase/server-props';
 
 export default function ShortLinkRedirect() {
   // This component will never render as we redirect on the server side
@@ -16,7 +16,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   try {
-    const supabase = createClient();
+    const supabase = createClient(context);
 
     // Find the short link
     const { data: shortLink, error } = await supabase

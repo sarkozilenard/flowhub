@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const supabase = createClient();
+    const supabase = createClient(req, res);
 
     // Find the short link
     const { data: shortLink, error } = await supabase
