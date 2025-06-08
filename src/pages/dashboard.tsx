@@ -494,29 +494,31 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50"
       >
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container-mobile nav-mobile">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Zap className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold text-primary">FlowHub</span>
+            <span className="text-xl sm:text-2xl font-bold text-primary">FlowHub</span>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <LanguageSelector />
-            <ThemeToggle />
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="hidden sm:flex items-center space-x-2">
+              <LanguageSelector />
+              <ThemeToggle />
+            </div>
             
             {/* Profile Button */}
             <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                <Button variant="ghost" size="sm" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3">
                   <User className="w-4 h-4" />
-                  <span className="hidden sm:inline">
+                  <span className="hidden md:inline text-sm">
                     {userProfile?.name || userProfile?.username || userProfile?.email}
                   </span>
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="dialog-content-mobile">
                 <DialogHeader>
                   <DialogTitle>Profile Settings</DialogTitle>
                 </DialogHeader>
@@ -525,6 +527,7 @@ export default function Dashboard() {
                     <Label htmlFor="profileName">Name</Label>
                     <Input
                       id="profileName"
+                      className="input-mobile"
                       value={profileForm.name}
                       onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
                       placeholder="Enter your name"
@@ -534,6 +537,7 @@ export default function Dashboard() {
                     <Label htmlFor="profileUsername">Username</Label>
                     <Input
                       id="profileUsername"
+                      className="input-mobile"
                       value={profileForm.username}
                       onChange={(e) => setProfileForm({...profileForm, username: e.target.value})}
                       placeholder="Enter your username"
@@ -549,64 +553,97 @@ export default function Dashboard() {
                       <span className="text-sm text-primary font-medium">Administrator</span>
                     </div>
                   )}
-                  <Button onClick={updateUserProfile} className="w-full">
+                  <Button onClick={updateUserProfile} className="button-mobile w-full">
                     Update Profile
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
             
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              {t('message.signOut')}
+            <Button variant="ghost" size="sm" onClick={signOut} className="px-2 sm:px-3">
+              <LogOut className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline text-sm">{t('message.signOut')}</span>
             </Button>
           </div>
+        </div>
+        
+        {/* Mobile controls row */}
+        <div className="sm:hidden border-t bg-background/90 px-4 py-2 flex items-center justify-center space-x-4">
+          <LanguageSelector />
+          <ThemeToggle />
         </div>
       </motion.header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container-mobile py-6 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">{t('dashboard.title')}</h1>
-            <p className="text-muted-foreground text-lg">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="heading-mobile-lg mb-2">{t('dashboard.title')}</h1>
+            <p className="text-muted-foreground text-base sm:text-lg">
               {t('dashboard.subtitle')}
             </p>
           </div>
 
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className={`grid w-full ${userProfile?.isAdmin ? 'grid-cols-9' : 'grid-cols-8'}`}>
-              <TabsTrigger value="overview">{t('nav.overview')}</TabsTrigger>
-              <TabsTrigger value="todos">{t('nav.todos')}</TabsTrigger>
-              <TabsTrigger value="notes">{t('nav.notes')}</TabsTrigger>
-              <TabsTrigger value="links">{t('nav.links')}</TabsTrigger>
-              <TabsTrigger value="tools">{t('nav.tools')}</TabsTrigger>
-              <TabsTrigger value="timetables">Timetables</TabsTrigger>
-              <TabsTrigger value="chat">{t('nav.chat')}</TabsTrigger>
-              <TabsTrigger value="help">Help</TabsTrigger>
-              {userProfile?.isAdmin && (
-                <TabsTrigger value="admin">
-                  <Shield className="w-4 h-4 mr-1" />
-                  Admin
+          <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+            {/* Mobile-optimized tabs */}
+            <div className="w-full">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 xl:grid-cols-9 gap-1 h-auto p-1">
+                <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
+                  <span className="hidden sm:inline">{t('nav.overview')}</span>
+                  <span className="sm:hidden">Overview</span>
                 </TabsTrigger>
-              )}
-            </TabsList>
+                <TabsTrigger value="todos" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
+                  <span className="hidden sm:inline">{t('nav.todos')}</span>
+                  <span className="sm:hidden">Tasks</span>
+                </TabsTrigger>
+                <TabsTrigger value="notes" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
+                  <span className="hidden sm:inline">{t('nav.notes')}</span>
+                  <span className="sm:hidden">Notes</span>
+                </TabsTrigger>
+                <TabsTrigger value="links" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
+                  <span className="hidden sm:inline">{t('nav.links')}</span>
+                  <span className="sm:hidden">Links</span>
+                </TabsTrigger>
+                <TabsTrigger value="tools" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
+                  <span className="hidden sm:inline">{t('nav.tools')}</span>
+                  <span className="sm:hidden">Tools</span>
+                </TabsTrigger>
+                <TabsTrigger value="timetables" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
+                  <span className="hidden sm:inline">Timetables</span>
+                  <span className="sm:hidden">Schedule</span>
+                </TabsTrigger>
+                <TabsTrigger value="chat" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
+                  <span className="hidden sm:inline">{t('nav.chat')}</span>
+                  <span className="sm:hidden">Chat</span>
+                </TabsTrigger>
+                <TabsTrigger value="help" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
+                  <span className="hidden sm:inline">Help</span>
+                  <span className="sm:hidden">Help</span>
+                </TabsTrigger>
+                {userProfile?.isAdmin && (
+                  <TabsTrigger value="admin" className="text-xs sm:text-sm px-2 py-2 sm:px-3">
+                    <Shield className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Admin</span>
+                  </TabsTrigger>
+                )}
+              </TabsList>
+            </div>
 
             {/* Overview Tab */}
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <motion.div variants={fadeInUp}>
-                  <Card>
+                  <Card className="card-mobile">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
                       <CheckCircle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{todos.length}</div>
+                      <div className="text-xl sm:text-2xl font-bold">{todos.length}</div>
                       <p className="text-xs text-muted-foreground">
                         {todos.filter(t => t.completed).length} completed
                       </p>
@@ -615,13 +652,13 @@ export default function Dashboard() {
                 </motion.div>
 
                 <motion.div variants={fadeInUp}>
-                  <Card>
+                  <Card className="card-mobile">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">{t('nav.notes')}</CardTitle>
                       <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{notes.length}</div>
+                      <div className="text-xl sm:text-2xl font-bold">{notes.length}</div>
                       <p className="text-xs text-muted-foreground">
                         Total notes created
                       </p>
@@ -630,13 +667,13 @@ export default function Dashboard() {
                 </motion.div>
 
                 <motion.div variants={fadeInUp}>
-                  <Card>
+                  <Card className="card-mobile">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Short Links</CardTitle>
                       <LinkIcon className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{shortLinks.length}</div>
+                      <div className="text-xl sm:text-2xl font-bold">{shortLinks.length}</div>
                       <p className="text-xs text-muted-foreground">
                         {shortLinks.reduce((sum, link) => sum + link.clicks, 0)} total clicks
                       </p>
@@ -645,13 +682,13 @@ export default function Dashboard() {
                 </motion.div>
 
                 <motion.div variants={fadeInUp}>
-                  <Card>
+                  <Card className="card-mobile">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">Productivity</CardTitle>
                       <Star className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className="text-xl sm:text-2xl font-bold">
                         {todos.length > 0 ? Math.round((todos.filter(t => t.completed).length / todos.length) * 100) : 0}%
                       </div>
                       <p className="text-xs text-muted-foreground">
@@ -663,25 +700,25 @@ export default function Dashboard() {
               </div>
 
               {/* Recent Activity */}
-              <Card>
+              <Card className="card-mobile">
                 <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Recent Activity</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {todos.slice(0, 3).map((todo) => (
                       <div key={todo.id} className="flex items-center space-x-3">
-                        <CheckCircle className={`w-4 h-4 ${todo.completed ? 'text-green-500' : 'text-gray-400'}`} />
-                        <span className={todo.completed ? 'line-through text-muted-foreground' : ''}>
+                        <CheckCircle className={`w-4 h-4 flex-shrink-0 ${todo.completed ? 'text-green-500' : 'text-gray-400'}`} />
+                        <span className={`flex-1 text-sm sm:text-base ${todo.completed ? 'line-through text-muted-foreground' : ''}`}>
                           {todo.title}
                         </span>
-                        <Badge variant="outline" className={getPriorityColor(todo.priority)}>
+                        <Badge variant="outline" className={`${getPriorityColor(todo.priority)} text-xs`}>
                           {t(`todos.priority.${todo.priority}`)}
                         </Badge>
                       </div>
                     ))}
                     {todos.length === 0 && (
-                      <p className="text-muted-foreground text-center py-4">
+                      <p className="text-muted-foreground text-center py-6 text-sm sm:text-base">
                         No tasks yet. Create your first task to get started!
                       </p>
                     )}

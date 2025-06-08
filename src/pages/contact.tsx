@@ -84,24 +84,25 @@ const ContactPage = () => {
           transition={{ duration: 0.6 }}
           className="border-b bg-background/80 backdrop-blur-sm"
         >
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="container-mobile nav-mobile">
             <Link href="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <HelpCircle className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-2xl font-bold text-primary">FlowHub</span>
+              <span className="text-xl sm:text-2xl font-bold text-primary">FlowHub</span>
             </Link>
             <Link href="/">
-              <Button variant="ghost" className="gap-2">
+              <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 px-2 sm:px-4">
                 <ArrowLeft className="w-4 h-4" />
-                Back to Home
+                <span className="hidden sm:inline">Back to Home</span>
+                <span className="sm:hidden">Back</span>
               </Button>
             </Link>
           </div>
         </motion.header>
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 py-12">
+        <div className="container-mobile py-8 sm:py-12">
           <motion.div 
             className="max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 40 }}
@@ -109,9 +110,9 @@ const ContactPage = () => {
             transition={{ duration: 0.8 }}
           >
             {/* Page Header */}
-            <div className="text-center mb-12">
+            <div className="text-center mb-8 sm:mb-12">
               <motion.h1 
-                className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent"
+                className="heading-mobile-xl mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
@@ -119,7 +120,7 @@ const ContactPage = () => {
                 Contact & Help
               </motion.h1>
               <motion.p 
-                className="text-xl text-muted-foreground max-w-2xl mx-auto"
+                className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto px-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
@@ -128,40 +129,40 @@ const ContactPage = () => {
               </motion.p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
               {/* Contact Information */}
               <motion.div variants={fadeInUp} initial="initial" animate="animate">
-                <Card className="h-full">
+                <Card className="card-mobile h-full">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                       <Mail className="w-5 h-5 text-primary" />
                       Get in Touch
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-4 sm:space-y-6">
                     <div>
-                      <h3 className="font-semibold mb-2">Email Support</h3>
-                      <p className="text-muted-foreground mb-2">
+                      <h3 className="font-semibold mb-2 text-sm sm:text-base">Email Support</h3>
+                      <p className="text-muted-foreground mb-2 text-sm">
                         For technical support, feature requests, or general inquiries:
                       </p>
                       <a 
                         href="mailto:flowhub@sarkozilenard.hu"
-                        className="text-primary hover:text-primary/80 transition-colors font-medium"
+                        className="text-primary hover:text-primary/80 transition-colors font-medium text-sm sm:text-base break-all"
                       >
                         flowhub@sarkozilenard.hu
                       </a>
                     </div>
 
                     <div>
-                      <h3 className="font-semibold mb-2">Response Time</h3>
-                      <p className="text-muted-foreground">
+                      <h3 className="font-semibold mb-2 text-sm sm:text-base">Response Time</h3>
+                      <p className="text-muted-foreground text-sm">
                         We typically respond within 24-48 hours during business days.
                       </p>
                     </div>
 
                     <div>
-                      <h3 className="font-semibold mb-2">What to Include</h3>
-                      <ul className="text-muted-foreground space-y-1 text-sm">
+                      <h3 className="font-semibold mb-2 text-sm sm:text-base">What to Include</h3>
+                      <ul className="text-muted-foreground space-y-1 text-xs sm:text-sm">
                         <li>• Detailed description of your issue</li>
                         <li>• Steps to reproduce the problem</li>
                         <li>• Browser and device information</li>
@@ -170,8 +171,8 @@ const ContactPage = () => {
                     </div>
 
                     <div>
-                      <h3 className="font-semibold mb-2">Quick Help</h3>
-                      <p className="text-muted-foreground text-sm">
+                      <h3 className="font-semibold mb-2 text-sm sm:text-base">Quick Help</h3>
+                      <p className="text-muted-foreground text-xs sm:text-sm">
                         For immediate assistance, try checking our FAQ section or 
                         browse the help documentation in your dashboard.
                       </p>
@@ -187,18 +188,18 @@ const ContactPage = () => {
                 animate="animate"
                 transition={{ delay: 0.2 }}
               >
-                <Card className="h-full">
+                <Card className="card-mobile h-full">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                       <MessageSquare className="w-5 h-5 text-primary" />
                       Send us a Message
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="name">Name</Label>
+                          <Label htmlFor="name" className="text-sm">Name</Label>
                           <Input
                             id="name"
                             name="name"
@@ -206,11 +207,12 @@ const ContactPage = () => {
                             placeholder="Your name"
                             value={formData.name}
                             onChange={handleInputChange}
+                            className="input-mobile"
                             required
                           />
                         </div>
                         <div>
-                          <Label htmlFor="email">Email</Label>
+                          <Label htmlFor="email" className="text-sm">Email</Label>
                           <Input
                             id="email"
                             name="email"
@@ -218,13 +220,14 @@ const ContactPage = () => {
                             placeholder="your.email@example.com"
                             value={formData.email}
                             onChange={handleInputChange}
+                            className="input-mobile"
                             required
                           />
                         </div>
                       </div>
 
                       <div>
-                        <Label htmlFor="subject">Subject</Label>
+                        <Label htmlFor="subject" className="text-sm">Subject</Label>
                         <Input
                           id="subject"
                           name="subject"
@@ -232,26 +235,28 @@ const ContactPage = () => {
                           placeholder="What's this about?"
                           value={formData.subject}
                           onChange={handleInputChange}
+                          className="input-mobile"
                           required
                         />
                       </div>
 
                       <div>
-                        <Label htmlFor="message">Message</Label>
+                        <Label htmlFor="message" className="text-sm">Message</Label>
                         <Textarea
                           id="message"
                           name="message"
                           placeholder="Tell us more about your question or issue..."
-                          rows={6}
+                          rows={5}
                           value={formData.message}
                           onChange={handleInputChange}
+                          className="resize-none text-sm sm:text-base"
                           required
                         />
                       </div>
 
                       <Button 
                         type="submit" 
-                        className="w-full gap-2" 
+                        className="button-mobile w-full gap-2" 
                         disabled={isLoading}
                       >
                         {isLoading ? (
@@ -271,38 +276,38 @@ const ContactPage = () => {
 
             {/* Additional Help Section */}
             <motion.div 
-              className="mt-12"
+              className="mt-8 sm:mt-12"
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
             >
-              <Card>
+              <Card className="card-mobile">
                 <CardHeader>
-                  <CardTitle>Frequently Asked Questions</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl">Frequently Asked Questions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                      <h4 className="font-semibold mb-2">How do I reset my password?</h4>
-                      <p className="text-muted-foreground text-sm mb-4">
+                      <h4 className="font-semibold mb-2 text-sm sm:text-base">How do I reset my password?</h4>
+                      <p className="text-muted-foreground text-xs sm:text-sm mb-4">
                         Use the "Forgot Password" link on the login page to receive a password reset email.
                       </p>
                     </div>
                     <div>
-                      <h4 className="font-semibold mb-2">Is my data secure?</h4>
-                      <p className="text-muted-foreground text-sm mb-4">
+                      <h4 className="font-semibold mb-2 text-sm sm:text-base">Is my data secure?</h4>
+                      <p className="text-muted-foreground text-xs sm:text-sm mb-4">
                         Yes, all user data is fully isolated and encrypted. We follow industry-standard security practices.
                       </p>
                     </div>
                     <div>
-                      <h4 className="font-semibold mb-2">Can I export my data?</h4>
-                      <p className="text-muted-foreground text-sm mb-4">
+                      <h4 className="font-semibold mb-2 text-sm sm:text-base">Can I export my data?</h4>
+                      <p className="text-muted-foreground text-xs sm:text-sm mb-4">
                         Data export features are available in your profile settings for most content types.
                       </p>
                     </div>
                     <div>
-                      <h4 className="font-semibold mb-2">How do I delete my account?</h4>
-                      <p className="text-muted-foreground text-sm mb-4">
+                      <h4 className="font-semibold mb-2 text-sm sm:text-base">How do I delete my account?</h4>
+                      <p className="text-muted-foreground text-xs sm:text-sm mb-4">
                         Account deletion can be done from your profile settings. This action is permanent and cannot be undone.
                       </p>
                     </div>
