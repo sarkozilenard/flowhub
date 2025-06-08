@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -39,9 +40,9 @@ import {
   Thermometer,
   Ruler,
   DollarSign,
-  Send
+  Send,
+  Shield
 } from "lucide-react";
-import { createClient } from '@/util/supabase/component';
 import { format } from 'date-fns';
 
 interface Todo {
@@ -79,9 +80,9 @@ const fadeInUp = {
 };
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user, userProfile, signOut, updateProfile } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
-  const supabase = createClient();
   
   // State management
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -93,11 +94,13 @@ export default function Dashboard() {
   const [newTodo, setNewTodo] = useState({ title: '', description: '', priority: 'medium', dueDate: '' });
   const [newNote, setNewNote] = useState({ title: '', content: '', tags: '' });
   const [newLink, setNewLink] = useState({ originalUrl: '', title: '', customCode: '' });
+  const [profileForm, setProfileForm] = useState({ name: '', username: '' });
   
   // Dialog states
   const [todoDialogOpen, setTodoDialogOpen] = useState(false);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   
   // Filter states
   const [todoFilter, setTodoFilter] = useState('all');
@@ -109,7 +112,6 @@ export default function Dashboard() {
   const [conversionType, setConversionType] = useState('uppercase');
   
   // Language and other tool states
-  const [currentLanguage, setCurrentLanguage] = useState('en');
   const [unitConverter, setUnitConverter] = useState({
     type: 'temperature',
     fromValue: '',
@@ -133,38 +135,43 @@ export default function Dashboard() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (userProfile) {
+      setProfileForm({
+        name: userProfile.name || '',
+        username: userProfile.username || ''
+      });
+    }
+  }, [userProfile]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
       
       // Fetch todos
-      const { data: todosData } = await supabase
-        .from('Todo')
-        .select('*')
-        .eq('userId', user?.id)
-        .order('createdAt', { ascending: false });
+      const todosResponse = await fetch('/api/todos');
+      if (todosResponse.ok) {
+        const todosData = await todosResponse.json();
+        setTodos(todosData);
+      }
       
       // Fetch notes
-      const { data: notesData } = await supabase
-        .from('Note')
-        .select('*')
-        .eq('userId', user?.id)
-        .order('updatedAt', { ascending: false });
+      const notesResponse = await fetch('/api/notes');
+      if (notesResponse.ok) {
+        const notesData = await notesResponse.json();
+        setNotes(notesData);
+      }
       
       // Fetch short links
-      const { data: linksData } = await supabase
-        .from('ShortLink')
-        .select('*')
-        .eq('userId', user?.id)
-        .order('createdAt', { ascending: false });
-      
-      setTodos(todosData || []);
-      setNotes(notesData || []);
-      setShortLinks(linksData || []);
+      const linksResponse = await fetch('/api/shortlinks');
+      if (linksResponse.ok) {
+        const linksData = await linksResponse.json();
+        setShortLinks(linksData);
+      }
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t('message.error'),
         description: "Failed to fetch data",
       });
     } finally {
@@ -177,32 +184,27 @@ export default function Dashboard() {
     if (!newTodo.title.trim()) return;
     
     try {
-      const { data, error } = await supabase
-        .from('Todo')
-        .insert({
-          title: newTodo.title,
-          description: newTodo.description || null,
-          priority: newTodo.priority,
-          dueDate: newTodo.dueDate || null,
-          userId: user?.id
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      setTodos([data, ...todos]);
-      setNewTodo({ title: '', description: '', priority: 'medium', dueDate: '' });
-      setTodoDialogOpen(false);
-      
-      toast({
-        title: "Success",
-        description: "Todo added successfully",
+      const response = await fetch('/api/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTodo)
       });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setTodos([data, ...todos]);
+        setNewTodo({ title: '', description: '', priority: 'medium', dueDate: '' });
+        setTodoDialogOpen(false);
+        
+        toast({
+          title: t('message.success'),
+          description: "Todo added successfully",
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t('message.error'),
         description: "Failed to add todo",
       });
     }
@@ -210,20 +212,21 @@ export default function Dashboard() {
 
   const toggleTodo = async (id: string, completed: boolean) => {
     try {
-      const { error } = await supabase
-        .from('Todo')
-        .update({ completed: !completed })
-        .eq('id', id);
+      const response = await fetch(`/api/todos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed: !completed })
+      });
       
-      if (error) throw error;
-      
-      setTodos(todos.map(todo => 
-        todo.id === id ? { ...todo, completed: !completed } : todo
-      ));
+      if (response.ok) {
+        setTodos(todos.map(todo => 
+          todo.id === id ? { ...todo, completed: !completed } : todo
+        ));
+      }
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t('message.error'),
         description: "Failed to update todo",
       });
     }
@@ -231,23 +234,22 @@ export default function Dashboard() {
 
   const deleteTodo = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('Todo')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      setTodos(todos.filter(todo => todo.id !== id));
-      
-      toast({
-        title: "Success",
-        description: "Todo deleted successfully",
+      const response = await fetch(`/api/todos/${id}`, {
+        method: 'DELETE'
       });
+      
+      if (response.ok) {
+        setTodos(todos.filter(todo => todo.id !== id));
+        
+        toast({
+          title: t('message.success'),
+          description: "Todo deleted successfully",
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t('message.error'),
         description: "Failed to delete todo",
       });
     }
@@ -258,33 +260,30 @@ export default function Dashboard() {
     if (!newNote.title.trim() || !newNote.content.trim()) return;
     
     try {
-      const tags = newNote.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-      
-      const { data, error } = await supabase
-        .from('Note')
-        .insert({
-          title: newNote.title,
-          content: newNote.content,
-          tags: tags,
-          userId: user?.id
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newNote,
+          tags: newNote.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
         })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      setNotes([data, ...notes]);
-      setNewNote({ title: '', content: '', tags: '' });
-      setNoteDialogOpen(false);
-      
-      toast({
-        title: "Success",
-        description: "Note added successfully",
       });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setNotes([data, ...notes]);
+        setNewNote({ title: '', content: '', tags: '' });
+        setNoteDialogOpen(false);
+        
+        toast({
+          title: t('message.success'),
+          description: "Note added successfully",
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t('message.error'),
         description: "Failed to add note",
       });
     }
@@ -292,23 +291,22 @@ export default function Dashboard() {
 
   const deleteNote = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('Note')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      setNotes(notes.filter(note => note.id !== id));
-      
-      toast({
-        title: "Success",
-        description: "Note deleted successfully",
+      const response = await fetch(`/api/notes/${id}`, {
+        method: 'DELETE'
       });
+      
+      if (response.ok) {
+        setNotes(notes.filter(note => note.id !== id));
+        
+        toast({
+          title: t('message.success'),
+          description: "Note deleted successfully",
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t('message.error'),
         description: "Failed to delete note",
       });
     }
@@ -319,54 +317,34 @@ export default function Dashboard() {
     if (!newLink.originalUrl.trim()) return;
     
     try {
-      let shortCode = newLink.customCode.trim();
-      
-      // If no custom code provided, generate random one
-      if (!shortCode) {
-        shortCode = Math.random().toString(36).substring(2, 8);
-      } else {
-        // Check if custom code already exists
-        const { data: existingLink } = await supabase
-          .from('ShortLink')
-          .select('id')
-          .eq('shortCode', shortCode)
-          .maybeSingle();
-        
-        if (existingLink) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "This custom code is already taken. Please choose another one.",
-          });
-          return;
-        }
-      }
-      
-      const { data, error } = await supabase
-        .from('ShortLink')
-        .insert({
-          originalUrl: newLink.originalUrl,
-          shortCode: shortCode,
-          title: newLink.title || null,
-          userId: user?.id
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      setShortLinks([data, ...shortLinks]);
-      setNewLink({ originalUrl: '', title: '', customCode: '' });
-      setLinkDialogOpen(false);
-      
-      toast({
-        title: "Success",
-        description: "Short link created successfully",
+      const response = await fetch('/api/shortlinks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newLink)
       });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setShortLinks([data, ...shortLinks]);
+        setNewLink({ originalUrl: '', title: '', customCode: '' });
+        setLinkDialogOpen(false);
+        
+        toast({
+          title: t('message.success'),
+          description: "Short link created successfully",
+        });
+      } else {
+        const errorData = await response.json();
+        toast({
+          variant: "destructive",
+          title: t('message.error'),
+          description: errorData.error || "Failed to create short link",
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: t('message.error'),
         description: "Failed to create short link",
       });
     }
@@ -376,9 +354,19 @@ export default function Dashboard() {
     const shortUrl = `${window.location.origin}/s/${shortCode}`;
     navigator.clipboard.writeText(shortUrl);
     toast({
-      title: "Copied!",
+      title: t('message.copied'),
       description: "Short link copied to clipboard",
     });
+  };
+
+  // Profile update function
+  const updateUserProfile = async () => {
+    try {
+      await updateProfile(profileForm);
+      setProfileDialogOpen(false);
+    } catch (error) {
+      // Error handling is done in the updateProfile function
+    }
   };
 
   // Text converter function
@@ -433,7 +421,7 @@ export default function Dashboard() {
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
             <Zap className="w-5 h-5 text-primary-foreground animate-pulse" />
           </div>
-          <p className="text-muted-foreground">Loading your workspace...</p>
+          <p className="text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -456,17 +444,62 @@ export default function Dashboard() {
           </div>
           
           <div className="flex items-center space-x-4">
-            <LanguageSelector 
-              currentLanguage={currentLanguage} 
-              onLanguageChange={setCurrentLanguage} 
-            />
+            <LanguageSelector />
             <ThemeToggle />
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              Welcome back, {user?.email}
-            </span>
+            
+            {/* Profile Button */}
+            <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline">
+                    {userProfile?.name || userProfile?.username || userProfile?.email}
+                  </span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Profile Settings</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="profileName">Name</Label>
+                    <Input
+                      id="profileName"
+                      value={profileForm.name}
+                      onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
+                      placeholder="Enter your name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="profileUsername">Username</Label>
+                    <Input
+                      id="profileUsername"
+                      value={profileForm.username}
+                      onChange={(e) => setProfileForm({...profileForm, username: e.target.value})}
+                      placeholder="Enter your username"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <User className="w-4 h-4" />
+                    <span className="text-sm text-muted-foreground">{userProfile?.email}</span>
+                  </div>
+                  {userProfile?.isAdmin && (
+                    <div className="flex items-center space-x-2">
+                      <Shield className="w-4 h-4 text-primary" />
+                      <span className="text-sm text-primary font-medium">Administrator</span>
+                    </div>
+                  )}
+                  <Button onClick={updateUserProfile} className="w-full">
+                    Update Profile
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
+              {t('message.signOut')}
             </Button>
           </div>
         </div>
@@ -480,20 +513,20 @@ export default function Dashboard() {
           transition={{ duration: 0.5 }}
         >
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Your Productivity Hub</h1>
+            <h1 className="text-4xl font-bold mb-2">{t('dashboard.title')}</h1>
             <p className="text-muted-foreground text-lg">
-              Manage your tasks, notes, and tools all in one place
+              {t('dashboard.subtitle')}
             </p>
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
             <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="todos">To-Dos</TabsTrigger>
-              <TabsTrigger value="notes">Notes</TabsTrigger>
-              <TabsTrigger value="links">Links</TabsTrigger>
-              <TabsTrigger value="tools">Tools</TabsTrigger>
-              <TabsTrigger value="chat">AI Chat</TabsTrigger>
+              <TabsTrigger value="overview">{t('nav.overview')}</TabsTrigger>
+              <TabsTrigger value="todos">{t('nav.todos')}</TabsTrigger>
+              <TabsTrigger value="notes">{t('nav.notes')}</TabsTrigger>
+              <TabsTrigger value="links">{t('nav.links')}</TabsTrigger>
+              <TabsTrigger value="tools">{t('nav.tools')}</TabsTrigger>
+              <TabsTrigger value="chat">{t('nav.chat')}</TabsTrigger>
             </TabsList>
 
             {/* Overview Tab */}
@@ -517,7 +550,7 @@ export default function Dashboard() {
                 <motion.div variants={fadeInUp}>
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Notes</CardTitle>
+                      <CardTitle className="text-sm font-medium">{t('nav.notes')}</CardTitle>
                       <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
@@ -576,7 +609,7 @@ export default function Dashboard() {
                           {todo.title}
                         </span>
                         <Badge variant="outline" className={getPriorityColor(todo.priority)}>
-                          {todo.priority}
+                          {t(`todos.priority.${todo.priority}`)}
                         </Badge>
                       </div>
                     ))}
@@ -597,7 +630,7 @@ export default function Dashboard() {
                   <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                     <Input
-                      placeholder="Search tasks..."
+                      placeholder={t('todos.searchPlaceholder')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
@@ -608,9 +641,9 @@ export default function Dashboard() {
                       <SelectValue placeholder="Filter tasks" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Tasks</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="all">{t('todos.all')}</SelectItem>
+                      <SelectItem value="pending">{t('todos.pending')}</SelectItem>
+                      <SelectItem value="completed">{t('todos.completed')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -619,7 +652,7 @@ export default function Dashboard() {
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Task
+                      {t('todos.add')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -628,7 +661,7 @@ export default function Dashboard() {
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="title">Title</Label>
+                        <Label htmlFor="title">{t('form.title')}</Label>
                         <Input
                           id="title"
                           value={newTodo.title}
@@ -637,7 +670,7 @@ export default function Dashboard() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="description">Description</Label>
+                        <Label htmlFor="description">{t('form.description')}</Label>
                         <Textarea
                           id="description"
                           value={newTodo.description}
@@ -646,20 +679,20 @@ export default function Dashboard() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="priority">Priority</Label>
+                        <Label htmlFor="priority">{t('form.priority')}</Label>
                         <Select value={newTodo.priority} onValueChange={(value) => setNewTodo({...newTodo, priority: value})}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="low">Low</SelectItem>
-                            <SelectItem value="medium">Medium</SelectItem>
-                            <SelectItem value="high">High</SelectItem>
+                            <SelectItem value="low">{t('todos.priority.low')}</SelectItem>
+                            <SelectItem value="medium">{t('todos.priority.medium')}</SelectItem>
+                            <SelectItem value="high">{t('todos.priority.high')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="dueDate">Due Date</Label>
+                        <Label htmlFor="dueDate">{t('form.dueDate')}</Label>
                         <Input
                           id="dueDate"
                           type="date"
@@ -693,7 +726,7 @@ export default function Dashboard() {
                               </h3>
                               <div className="flex items-center space-x-2">
                                 <Badge variant="outline" className={getPriorityColor(todo.priority)}>
-                                  {todo.priority}
+                                  {t(`todos.priority.${todo.priority}`)}
                                 </Badge>
                                 <Button
                                   variant="ghost"
@@ -729,14 +762,14 @@ export default function Dashboard() {
                   <Card>
                     <CardContent className="p-8 text-center">
                       <CheckCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">No tasks found</h3>
+                      <h3 className="text-lg font-medium mb-2">{t('todos.noTasks')}</h3>
                       <p className="text-muted-foreground mb-4">
                         {searchTerm ? 'Try adjusting your search or filter.' : 'Create your first task to get started!'}
                       </p>
                       {!searchTerm && (
                         <Button onClick={() => setTodoDialogOpen(true)}>
                           <Plus className="w-4 h-4 mr-2" />
-                          Add Your First Task
+                          {t('todos.addFirst')}
                         </Button>
                       )}
                     </CardContent>
@@ -748,12 +781,12 @@ export default function Dashboard() {
             {/* Notes Tab */}
             <TabsContent value="notes" className="space-y-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Your Notes</h2>
+                <h2 className="text-2xl font-bold">{t('notes.title')}</h2>
                 <Dialog open={noteDialogOpen} onOpenChange={setNoteDialogOpen}>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Note
+                      {t('notes.add')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
@@ -762,7 +795,7 @@ export default function Dashboard() {
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="noteTitle">Title</Label>
+                        <Label htmlFor="noteTitle">{t('form.title')}</Label>
                         <Input
                           id="noteTitle"
                           value={newNote.title}
@@ -771,7 +804,7 @@ export default function Dashboard() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="noteContent">Content</Label>
+                        <Label htmlFor="noteContent">{t('form.content')}</Label>
                         <Textarea
                           id="noteContent"
                           value={newNote.content}
@@ -781,7 +814,7 @@ export default function Dashboard() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="noteTags">Tags (comma separated)</Label>
+                        <Label htmlFor="noteTags">{t('form.tags')} (comma separated)</Label>
                         <Input
                           id="noteTags"
                           value={newNote.tags}
@@ -841,13 +874,13 @@ export default function Dashboard() {
                     <Card>
                       <CardContent className="p-8 text-center">
                         <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-lg font-medium mb-2">No notes yet</h3>
+                        <h3 className="text-lg font-medium mb-2">{t('notes.noNotes')}</h3>
                         <p className="text-muted-foreground mb-4">
                           Create your first note to start organizing your thoughts!
                         </p>
                         <Button onClick={() => setNoteDialogOpen(true)}>
                           <Plus className="w-4 h-4 mr-2" />
-                          Add Your First Note
+                          {t('notes.addFirst')}
                         </Button>
                       </CardContent>
                     </Card>
@@ -859,12 +892,12 @@ export default function Dashboard() {
             {/* Links Tab */}
             <TabsContent value="links" className="space-y-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Short Links</h2>
+                <h2 className="text-2xl font-bold">{t('links.title')}</h2>
                 <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="w-4 h-4 mr-2" />
-                      Create Link
+                      {t('links.create')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -873,7 +906,7 @@ export default function Dashboard() {
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="originalUrl">Original URL</Label>
+                        <Label htmlFor="originalUrl">{t('form.originalUrl')}</Label>
                         <Input
                           id="originalUrl"
                           value={newLink.originalUrl}
@@ -882,7 +915,7 @@ export default function Dashboard() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="linkTitle">Title (optional)</Label>
+                        <Label htmlFor="linkTitle">{t('form.title')} (optional)</Label>
                         <Input
                           id="linkTitle"
                           value={newLink.title}
@@ -891,7 +924,7 @@ export default function Dashboard() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="customCode">Custom Code (optional)</Label>
+                        <Label htmlFor="customCode">{t('form.customCode')} (optional)</Label>
                         <Input
                           id="customCode"
                           value={newLink.customCode}
@@ -967,13 +1000,13 @@ export default function Dashboard() {
                   <Card>
                     <CardContent className="p-8 text-center">
                       <LinkIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">No short links yet</h3>
+                      <h3 className="text-lg font-medium mb-2">{t('links.noLinks')}</h3>
                       <p className="text-muted-foreground mb-4">
                         Create your first short link to start tracking clicks!
                       </p>
                       <Button onClick={() => setLinkDialogOpen(true)}>
                         <Plus className="w-4 h-4 mr-2" />
-                        Create Your First Link
+                        {t('links.createFirst')}
                       </Button>
                     </CardContent>
                   </Card>
@@ -983,7 +1016,7 @@ export default function Dashboard() {
 
             {/* Tools Tab */}
             <TabsContent value="tools" className="space-y-6">
-              <h2 className="text-2xl font-bold">Productivity Tools</h2>
+              <h2 className="text-2xl font-bold">{t('tools.title')}</h2>
               
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Text Case Converter */}
@@ -991,7 +1024,7 @@ export default function Dashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <Calculator className="w-5 h-5 mr-2" />
-                      Text Case Converter
+                      {t('tools.textConverter')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -1033,7 +1066,7 @@ export default function Dashboard() {
                           onClick={() => navigator.clipboard.writeText(convertedText)}
                         >
                           <Copy className="w-4 h-4 mr-2" />
-                          Copy Result
+                          {t('common.copy')} Result
                         </Button>
                       </div>
                     )}
@@ -1045,7 +1078,7 @@ export default function Dashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <Thermometer className="w-5 h-5 mr-2" />
-                      Unit Converter
+                      {t('tools.unitConverter')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -1206,7 +1239,7 @@ export default function Dashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <MessageSquare className="w-5 h-5 mr-2" />
-                      Language Translator
+                      {t('tools.translator')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -1296,7 +1329,7 @@ export default function Dashboard() {
                           onClick={() => navigator.clipboard.writeText(translator.translatedText)}
                         >
                           <Copy className="w-4 h-4 mr-2" />
-                          Copy Translation
+                          {t('common.copy')} Translation
                         </Button>
                       </div>
                     )}
@@ -1308,7 +1341,7 @@ export default function Dashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <Calculator className="w-5 h-5 mr-2" />
-                      File Size Converter
+                      {t('tools.fileSizeConverter')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -1390,7 +1423,7 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <MessageSquare className="w-5 h-5 mr-2" />
-                    AI Chat Assistant
+                    {t('nav.chat')} Assistant
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col space-y-4">
@@ -1401,6 +1434,7 @@ export default function Dashboard() {
                         <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-50" />
                         <p>Start a conversation with your AI assistant!</p>
                         <p className="text-sm mt-2">Ask about productivity tips, task management, or anything else.</p>
+                        <p className="text-sm mt-2 text-orange-600">Note: AI chat is currently unavailable due to API quota limits.</p>
                       </div>
                     ) : (
                       chatMessages.map((message, index) => (
@@ -1475,12 +1509,12 @@ export default function Dashboard() {
                                 console.error('Chat error:', error);
                                 setChatMessages([...newMessages, { 
                                   role: 'assistant', 
-                                  content: 'Sorry, I encountered an error. Please try again.' 
+                                  content: 'Sorry, I encountered an error. The AI service is currently unavailable due to quota limits.' 
                                 }]);
                                 toast({
                                   variant: "destructive",
-                                  title: "Error",
-                                  description: "Failed to get AI response",
+                                  title: t('message.error'),
+                                  description: "AI service is currently unavailable",
                                 });
                               } finally {
                                 setChatLoading(false);
@@ -1526,12 +1560,12 @@ export default function Dashboard() {
                             console.error('Chat error:', error);
                             setChatMessages([...newMessages, { 
                               role: 'assistant', 
-                              content: 'Sorry, I encountered an error. Please try again.' 
+                              content: 'Sorry, I encountered an error. The AI service is currently unavailable due to quota limits.' 
                             }]);
                             toast({
                               variant: "destructive",
-                              title: "Error",
-                              description: "Failed to get AI response",
+                              title: t('message.error'),
+                              description: "AI service is currently unavailable",
                             });
                           } finally {
                             setChatLoading(false);

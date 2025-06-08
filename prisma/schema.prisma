@@ -11,8 +11,10 @@ datasource db {
 model User {
   id         String   @id @db.Uuid
   email      String   @unique
+  username   String?  @unique
   name       String?
   profilePicture String?
+  isAdmin    Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   

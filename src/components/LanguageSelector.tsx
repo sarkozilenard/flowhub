@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Languages } from "lucide-react"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -11,18 +12,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-interface LanguageSelectorProps {
-  currentLanguage: string
-  onLanguageChange: (language: string) => void
-}
-
-export function LanguageSelector({ currentLanguage, onLanguageChange }: LanguageSelectorProps) {
+export function LanguageSelector() {
+  const { language, setLanguage } = useLanguage()
+  
   const languages = [
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'hu', name: 'Magyar', flag: '🇭🇺' },
+    { code: 'en' as const, name: 'English', flag: '🇺🇸' },
+    { code: 'hu' as const, name: 'Magyar', flag: '🇭🇺' },
   ]
 
-  const currentLang = languages.find(lang => lang.code === currentLanguage) || languages[0]
+  const currentLang = languages.find(lang => lang.code === language) || languages[0]
 
   return (
     <DropdownMenu>
@@ -34,14 +32,14 @@ export function LanguageSelector({ currentLanguage, onLanguageChange }: Language
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {languages.map((language) => (
+        {languages.map((lang) => (
           <DropdownMenuItem
-            key={language.code}
-            onClick={() => onLanguageChange(language.code)}
-            className={currentLanguage === language.code ? "bg-accent" : ""}
+            key={lang.code}
+            onClick={() => setLanguage(lang.code)}
+            className={language === lang.code ? "bg-accent" : ""}
           >
-            <span className="mr-2">{language.flag}</span>
-            {language.name}
+            <span className="mr-2">{lang.flag}</span>
+            {lang.name}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

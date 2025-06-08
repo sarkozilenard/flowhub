@@ -24,8 +24,8 @@ const SignUpPage = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const { email, password } = formik.values;
-      await signUp(email, password);
+      const { username, email, password } = formik.values;
+      await signUp(email, password, username);
       router.push('/login');
     } catch (error) {
       console.error(error);
@@ -40,6 +40,11 @@ const SignUpPage = () => {
   }
 
   const validationSchema = Yup.object().shape({
+    username: Yup.string()
+      .required("Username is required")
+      .min(3, "Must be at least 3 characters")
+      .max(20, "Must not exceed 20 characters")
+      .matches(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
     email: Yup.string().required("Email is required").email("Email is invalid"),
     password: Yup.string()
       .required("Password is required")
@@ -49,6 +54,7 @@ const SignUpPage = () => {
 
   const formik = useFormik({
     initialValues: {
+      username: '',
       email: '',
       password: '',
     },
@@ -99,6 +105,22 @@ const SignUpPage = () => {
                 <div className="flex flex-col gap-6">
                   <p className="text-center text-sm text-muted-foreground">Enter your details</p>
                   <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="username">Username</Label>
+                      <Input
+                        id="username"
+                        name="username"
+                        type="text"
+                        placeholder="Enter your username"
+                        value={formik.values.username}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                      />
+                      {formik.touched.username && formik.errors.username && (
+                        <p className="text-destructive text-xs">{formik.errors.username}</p>
+                      )}
+                    </div>
+
                     <div className="flex flex-col gap-2">
                       <Label htmlFor="email">Email</Label>
                       <Input

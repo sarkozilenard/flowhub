@@ -1,5 +1,5 @@
 import { GetServerSideProps } from 'next';
-import { createClient } from '@/util/supabase/server-props';
+import prisma from '@/lib/prisma';
 
 export default function ShortLinkRedirect() {
   // This component will never render as we redirect on the server side
@@ -16,26 +16,27 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   try {
-    const supabase = createClient(context);
-
     // Find the short link
-    const { data: shortLink, error } = await supabase
-      .from('ShortLink')
-      .select('originalUrl, clicks')
-      .eq('shortCode', shortCode)
-      .single();
+    const shortLink = await prisma.shortLink.findUnique({
+      where: { shortCode },
+      select: {
+        originalUrl: true,
+        clicks: true,
+        id: true,
+      }
+    });
 
-    if (error || !shortLink) {
+    if (!shortLink) {
       return {
         notFound: true,
       };
     }
 
     // Increment click count
-    await supabase
-      .from('ShortLink')
-      .update({ clicks: shortLink.clicks + 1 })
-      .eq('shortCode', shortCode);
+    await prisma.shortLink.update({
+      where: { shortCode },
+      data: { clicks: shortLink.clicks + 1 }
+    });
 
     // Redirect to original URL
     return {

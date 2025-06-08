@@ -42,7 +42,7 @@ const LoginPage = () => {
   }
 
   const validationSchema = Yup.object().shape({
-    email: Yup.string().required("Email is required").email("Email is invalid"),
+    email: Yup.string().required("Email or username is required"),
     password: Yup.string()
       .required("Password is required")
       .min(4, "Must be at least 4 characters")
@@ -101,12 +101,12 @@ const LoginPage = () => {
                   <p className="text-center text-sm text-muted-foreground">Enter your credentials</p>
                   <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">Email or Username</Label>
                       <Input
                         id="email"
                         name="email"
-                        type="email"
-                        placeholder="Enter your email"
+                        type="text"
+                        placeholder="Enter your email or username"
                         value={formik.values.email}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}

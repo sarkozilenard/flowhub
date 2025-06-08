@@ -4,20 +4,34 @@ import { User, Provider } from '@supabase/supabase-js';
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from 'next/router';
 
+interface UserProfile {
+  id: string;
+  email: string;
+  username?: string;
+  name?: string;
+  profilePicture?: string;
+  isAdmin: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface AuthContextType {
   user: User | null;
-  createUser: (user: User) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  userProfile: UserProfile | null;
+  createUser: (user: User, username?: string) => Promise<void>;
+  signIn: (emailOrUsername: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, username: string) => Promise<void>;
   signInWithMagicLink: (email: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updateProfile: (data: { name?: string; username?: string }) => Promise<void>;
   initializing: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
+  userProfile: null,
   createUser: async () => {},
   signIn: async () => {},
   signUp: async () => {},
@@ -25,12 +39,14 @@ export const AuthContext = createContext<AuthContextType>({
   signInWithGoogle: async () => {},
   signOut: async () => {},
   resetPassword: async () => {},
+  updateProfile: async () => {},
   initializing: false
 });
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [initializing, setInitializing] = useState(true);
   const supabase = createClient();
   const { toast } = useToast();
@@ -39,15 +55,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const fetchSession = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+      if (user) {
+        await fetchUserProfile(user.id);
+      }
       setInitializing(false);
     };
 
     fetchSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // The setTimeout is necessary to allow Supabase functions to trigger inside onAuthStateChange
       setTimeout(async () => {
         setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        } else {
+          setUserProfile(null);
+        }
         setInitializing(false);
       }, 0);
     });
@@ -57,30 +80,47 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
-  const createUser = async (user: User) => {
+  const fetchUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('User')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle();
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-      if (!data) {
-        const { error: insertError } = await supabase
-          .from('User')
-          .insert({
-            id: user.id,
-            email: user.email,
-            name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-            profilePicture: user.user_metadata?.avatar_url || null,
-          });
-        if (insertError) {
-          throw insertError;
+      const response = await fetch('/api/user/profile', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         }
+      });
+      
+      if (response.ok) {
+        const profile = await response.json();
+        setUserProfile(profile);
       }
     } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  const createUser = async (user: User, username?: string) => {
+    try {
+      const response = await fetch('/api/user/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          id: user.id,
+          email: user.email,
+          username: username,
+          name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+          profilePicture: user.user_metadata?.avatar_url || null,
+        })
+      });
+
+      if (response.ok) {
+        const profile = await response.json();
+        setUserProfile(profile);
+      }
+    } catch (error) {
+      console.error('Error creating user:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -89,8 +129,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const signIn = async (emailOrUsername: string, password: string) => {
+    // First try to sign in with email
+    let { data, error } = await supabase.auth.signInWithPassword({ 
+      email: emailOrUsername, 
+      password 
+    });
+
+    // If that fails and the input doesn't contain @, try to find email by username
+    if (error && !emailOrUsername.includes('@')) {
+      try {
+        const response = await fetch('/api/user/find-by-username', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username: emailOrUsername })
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          const result = await supabase.auth.signInWithPassword({ 
+            email: userData.email, 
+            password 
+          });
+          data = result.data;
+          error = result.error;
+        }
+      } catch (usernameError) {
+        console.error('Error finding user by username:', usernameError);
+      }
+    }
+
     if (!error && data.user) {
       await createUser(data.user);
     }
@@ -110,14 +180,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, username: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password
     });
 
     if (data.user) {
-      await createUser(data.user);
+      await createUser(data.user, username);
     }
 
     if (error) {
@@ -188,6 +258,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         description: error.message,
       });
     } else {
+      setUserProfile(null);
       toast({
         title: "Success",
         description: "You have successfully signed out",
@@ -215,9 +286,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const updateProfile = async (data: { name?: string; username?: string }) => {
+    try {
+      const response = await fetch('/api/user/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (response.ok) {
+        const updatedProfile = await response.json();
+        setUserProfile(updatedProfile);
+        toast({
+          title: "Success",
+          description: "Profile updated successfully",
+        });
+      } else {
+        throw new Error('Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update profile",
+      });
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
+      userProfile,
       createUser,
       signIn,
       signUp,
@@ -225,8 +329,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       signInWithGoogle,
       signOut,
       resetPassword,
+      updateProfile,
       initializing,
-
     }}>
       {children}
     </AuthContext.Provider>
