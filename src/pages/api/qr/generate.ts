@@ -62,10 +62,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     res.status(200).json({
-      id: qrCode.id,
+      ...qrCode,
       qrCodeData,
-      format: format.toLowerCase(),
-      ...qrCode
+      format: format.toLowerCase()
     });
   } catch (error) {
     console.error('QR code generation error:', error);

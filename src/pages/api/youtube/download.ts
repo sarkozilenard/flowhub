@@ -94,14 +94,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         fileSize: selectedFormat?.contentLength
       });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('YouTube download error:', error);
     
-    if (error.message.includes('Video unavailable')) {
+    if (error?.message?.includes('Video unavailable')) {
       return res.status(404).json({ error: 'Video not found or unavailable' });
-    } else if (error.message.includes('Private video')) {
+    } else if (error?.message?.includes('Private video')) {
       return res.status(403).json({ error: 'Private video cannot be downloaded' });
-    } else if (error.message.includes('Age-restricted')) {
+    } else if (error?.message?.includes('Age-restricted')) {
       return res.status(403).json({ error: 'Age-restricted video cannot be downloaded' });
     }
     
