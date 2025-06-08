@@ -83,6 +83,51 @@ const translations: Translations = {
   'message.error': { en: 'Error', hu: 'Hiba' },
   'message.copied': { en: 'Copied!', hu: 'Másolva!' },
   'message.signOut': { en: 'Sign Out', hu: 'Kijelentkezés' },
+  
+  // Homepage
+  'home.title': { en: 'FlowHub - Your All-in-One Productivity Suite', hu: 'FlowHub - Az Ön Mindent Egyben Produktivitási Csomagja' },
+  'home.description': { en: 'A modern all-in-one web application for daily productivity, utilities, and personal tools. Streamline your workflow with FlowHub.', hu: 'Modern mindent egyben webalkalmazás napi produktivitáshoz, segédprogramokhoz és személyes eszközökhöz. Egyszerűsítse munkafolyamatát a FlowHub-bal.' },
+  'home.hero.title': { en: 'Your All-in-One\nProductivity Hub', hu: 'Az Ön Mindent Egyben\nProduktivitási Központja' },
+  'home.hero.subtitle': { en: 'Streamline your daily workflow with powerful tools for task management, note-taking, file conversion, and more. All in one beautiful, secure platform.', hu: 'Egyszerűsítse napi munkafolyamatát hatékony eszközökkel feladatkezeléshez, jegyzeteléshez, fájlkonverzióhoz és még sok máshoz. Minden egy gyönyörű, biztonságos platformon.' },
+  'home.hero.startJourney': { en: 'Start Your Journey', hu: 'Kezdje El Útját' },
+  'home.hero.signIn': { en: 'Sign In', hu: 'Bejelentkezés' },
+  'home.help': { en: 'Help', hu: 'Segítség' },
+  'home.getStarted': { en: 'Get Started', hu: 'Kezdés' },
+  
+  // Features
+  'home.features.title': { en: 'Everything You Need in One Place', hu: 'Minden Amire Szüksége Van Egy Helyen' },
+  'home.features.subtitle': { en: 'Powerful tools designed to boost your productivity and simplify your digital life', hu: 'Hatékony eszközök, amelyek növelik produktivitását és egyszerűsítik digitális életét' },
+  'home.features.todos.title': { en: 'Smart To-Do Lists', hu: 'Intelligens Feladatlisták' },
+  'home.features.todos.description': { en: 'Organize your tasks with intelligent filtering and sorting', hu: 'Szervezze feladatait intelligens szűréssel és rendezéssel' },
+  'home.features.calendar.title': { en: 'Calendar & Events', hu: 'Naptár és Események' },
+  'home.features.calendar.description': { en: 'Never miss important dates with our integrated calendar system', hu: 'Soha ne mulasszon el fontos dátumokat integrált naptárrendszerünkkel' },
+  'home.features.notes.title': { en: 'Notes & Documentation', hu: 'Jegyzetek és Dokumentáció' },
+  'home.features.notes.description': { en: 'Create and manage your notes with rich text editing', hu: 'Hozzon létre és kezeljen jegyzeteket gazdag szövegszerkesztéssel' },
+  'home.features.links.title': { en: 'Link Shortener', hu: 'Link Rövidítő' },
+  'home.features.links.description': { en: 'Create custom short links and track their performance', hu: 'Hozzon létre egyéni rövid linkeket és kövesse nyomon teljesítményüket' },
+  'home.features.converters.title': { en: 'Smart Converters', hu: 'Intelligens Konvertálók' },
+  'home.features.converters.description': { en: 'Convert units, currencies, and file formats effortlessly', hu: 'Konvertáljon mértékegységeket, valutákat és fájlformátumokat könnyedén' },
+  'home.features.chat.title': { en: 'AI Chat Assistant', hu: 'AI Chat Asszisztens' },
+  'home.features.chat.description': { en: 'Get help and answers with integrated ChatGPT', hu: 'Kapjon segítséget és válaszokat az integrált ChatGPT-vel' },
+  
+  // File Converters
+  'home.converters.title': { en: 'Comprehensive File Conversion Tools', hu: 'Átfogó Fájlkonverziós Eszközök' },
+  'home.converters.subtitle': { en: 'Convert between dozens of file formats with ease. From audio and video to documents and archives, we\'ve got you covered.', hu: 'Konvertáljon tucatnyi fájlformátum között könnyedén. Hangtól és videótól a dokumentumokig és archívumokig, mindent lefedünk.' },
+  
+  // Benefits
+  'home.benefits.title': { en: 'Why Choose FlowHub?', hu: 'Miért Válassza a FlowHub-ot?' },
+  'home.benefits.subtitle': { en: 'Built with modern technology and user experience in mind', hu: 'Modern technológiával és felhasználói élményre összpontosítva építve' },
+  'home.benefits.fast.title': { en: 'Lightning Fast', hu: 'Villámgyors' },
+  'home.benefits.fast.description': { en: 'Built for speed and efficiency in your daily workflow', hu: 'Sebességre és hatékonyságra építve napi munkafolyamatában' },
+  'home.benefits.secure.title': { en: 'Secure & Private', hu: 'Biztonságos és Privát' },
+  'home.benefits.secure.description': { en: 'Your data is fully isolated and protected', hu: 'Az Ön adatai teljesen elkülönítettek és védettek' },
+  'home.benefits.scalable.title': { en: 'Personal & Scalable', hu: 'Személyes és Skálázható' },
+  'home.benefits.scalable.description': { en: 'Designed for personal use but ready to grow', hu: 'Személyes használatra tervezve, de készen áll a növekedésre' },
+  
+  // CTA
+  'home.cta.title': { en: 'Ready to Transform Your Productivity?', hu: 'Készen Áll Produktivitása Átalakítására?' },
+  'home.cta.subtitle': { en: 'Join thousands of users who have streamlined their workflow with FlowHub', hu: 'Csatlakozzon több ezer felhasználóhoz, akik egyszerűsítették munkafolyamatukat a FlowHub-bal' },
+  'home.cta.getStartedFree': { en: 'Get Started for Free', hu: 'Kezdés Ingyen' },
 };
 
 interface LanguageContextType {

@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { CheckCircle, Calendar, FileText, Link as LinkIcon, Calculator, MessageSquare, Zap, Shield, Users, ArrowRight, FileAudio, FileVideo, FileImage, FileSpreadsheet, Archive, Code } from "lucide-react";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
@@ -22,36 +23,36 @@ const staggerContainer = {
   }
 };
 
-const features = [
+const getFeatures = (t: (key: string) => string) => [
   {
     icon: CheckCircle,
-    title: "Smart To-Do Lists",
-    description: "Organize your tasks with intelligent filtering and sorting"
+    title: t('home.features.todos.title'),
+    description: t('home.features.todos.description')
   },
   {
     icon: Calendar,
-    title: "Calendar & Events",
-    description: "Never miss important dates with our integrated calendar system"
+    title: t('home.features.calendar.title'),
+    description: t('home.features.calendar.description')
   },
   {
     icon: FileText,
-    title: "Notes & Documentation",
-    description: "Create and manage your notes with rich text editing"
+    title: t('home.features.notes.title'),
+    description: t('home.features.notes.description')
   },
   {
     icon: LinkIcon,
-    title: "Link Shortener",
-    description: "Create custom short links and track their performance"
+    title: t('home.features.links.title'),
+    description: t('home.features.links.description')
   },
   {
     icon: Calculator,
-    title: "Smart Converters",
-    description: "Convert units, currencies, and file formats effortlessly"
+    title: t('home.features.converters.title'),
+    description: t('home.features.converters.description')
   },
   {
     icon: MessageSquare,
-    title: "AI Chat Assistant",
-    description: "Get help and answers with integrated ChatGPT"
+    title: t('home.features.chat.title'),
+    description: t('home.features.chat.description')
   }
 ];
 
@@ -126,30 +127,34 @@ const fileConverters = [
   }
 ];
 
-const benefits = [
-  {
-    icon: Zap,
-    title: "Lightning Fast",
-    description: "Built for speed and efficiency in your daily workflow"
-  },
-  {
-    icon: Shield,
-    title: "Secure & Private",
-    description: "Your data is fully isolated and protected"
-  },
-  {
-    icon: Users,
-    title: "Personal & Scalable",
-    description: "Designed for personal use but ready to grow"
-  }
-];
+=======
 
 export default function Home() {
+  const { t } = useLanguage();
+  const features = getFeatures(t);
+  const benefits = [
+    {
+      icon: Zap,
+      title: t('home.benefits.fast.title'),
+      description: t('home.benefits.fast.description')
+    },
+    {
+      icon: Shield,
+      title: t('home.benefits.secure.title'),
+      description: t('home.benefits.secure.description')
+    },
+    {
+      icon: Users,
+      title: t('home.benefits.scalable.title'),
+      description: t('home.benefits.scalable.description')
+    }
+  ];
+
   return (
     <>
       <Head>
-        <title>FlowHub - Your All-in-One Productivity Suite</title>
-        <meta name="description" content="A modern all-in-one web application for daily productivity, utilities, and personal tools. Streamline your workflow with FlowHub." />
+        <title>{t('home.title')}</title>
+        <meta name="description" content={t('home.description')} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -172,11 +177,14 @@ export default function Home() {
             <div className="flex items-center space-x-4">
               <LanguageSelector />
               <ThemeToggle />
+              <Link href="/contact">
+                <Button variant="ghost" size="sm">{t('home.help')}</Button>
+              </Link>
               <Link href="/login">
-                <Button variant="ghost">Sign In</Button>
+                <Button variant="ghost">{t('home.hero.signIn')}</Button>
               </Link>
               <Link href="/signup">
-                <Button>Get Started</Button>
+                <Button>{t('home.getStarted')}</Button>
               </Link>
             </div>
           </div>
@@ -196,9 +204,12 @@ export default function Home() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              Your All-in-One
-              <br />
-              Productivity Hub
+              {t('home.hero.title').split('\n').map((line, index) => (
+                <span key={index}>
+                  {line}
+                  {index === 0 && <br />}
+                </span>
+              ))}
             </motion.h1>
             
             <motion.p 
@@ -207,8 +218,7 @@ export default function Home() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              Streamline your daily workflow with powerful tools for task management, 
-              note-taking, file conversion, and more. All in one beautiful, secure platform.
+              {t('home.hero.subtitle')}
             </motion.p>
             
             <motion.div 
@@ -219,13 +229,13 @@ export default function Home() {
             >
               <Link href="/signup">
                 <Button size="lg" className="text-lg px-8 py-6 group">
-                  Start Your Journey
+                  {t('home.hero.startJourney')}
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link href="/login">
                 <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-                  Sign In
+                  {t('home.hero.signIn')}
                 </Button>
               </Link>
             </motion.div>
@@ -258,10 +268,10 @@ export default function Home() {
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Everything You Need in One Place
+              {t('home.features.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Powerful tools designed to boost your productivity and simplify your digital life
+              {t('home.features.subtitle')}
             </p>
           </motion.div>
 
@@ -298,10 +308,10 @@ export default function Home() {
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Comprehensive File Conversion Tools
+              {t('home.converters.title')}
             </h2>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Convert between dozens of file formats with ease. From audio and video to documents and archives, we've got you covered.
+              {t('home.converters.subtitle')}
             </p>
           </motion.div>
 
@@ -346,10 +356,10 @@ export default function Home() {
               transition={{ duration: 0.8 }}
             >
               <h2 className="text-4xl md:text-5xl font-bold mb-4">
-                Why Choose FlowHub?
+                {t('home.benefits.title')}
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Built with modern technology and user experience in mind
+                {t('home.benefits.subtitle')}
               </p>
             </motion.div>
 
@@ -385,14 +395,14 @@ export default function Home() {
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Ready to Transform Your Productivity?
+              {t('home.cta.title')}
             </h2>
             <p className="text-xl text-muted-foreground mb-8">
-              Join thousands of users who have streamlined their workflow with FlowHub
+              {t('home.cta.subtitle')}
             </p>
             <Link href="/signup">
               <Button size="lg" className="text-lg px-12 py-6 group">
-                Get Started for Free
+                {t('home.cta.getStartedFree')}
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
