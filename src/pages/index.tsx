@@ -4,7 +4,9 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { CheckCircle, Calendar, FileText, Link as LinkIcon, Calculator, MessageSquare, Zap, Shield, Users, ArrowRight } from "lucide-react";
+import { CheckCircle, Calendar, FileText, Link as LinkIcon, Calculator, MessageSquare, Zap, Shield, Users, ArrowRight, FileAudio, FileVideo, FileImage, FileSpreadsheet, Archive, Code } from "lucide-react";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 60 },
@@ -53,6 +55,77 @@ const features = [
   }
 ];
 
+const fileConverters = [
+  {
+    icon: FileAudio,
+    title: "🔊 Audio Conversion",
+    formats: [
+      "MP4 → MP3 (audio only from video)",
+      "WAV ↔ MP3",
+      "MP3 ↔ AAC, OGG, FLAC, M4A"
+    ]
+  },
+  {
+    icon: FileVideo,
+    title: "🎥 Video Conversion",
+    formats: [
+      "YouTube link → MP4 / MP3 (download + convert)",
+      "MP4 ↔ AVI / MOV / MKV / WebM",
+      "Video → GIF"
+    ]
+  },
+  {
+    icon: FileImage,
+    title: "📷 Image Conversion",
+    formats: [
+      "JPG ↔ PNG / WebP / BMP / TIFF / HEIC",
+      "Image to PDF",
+      "SVG ↔ PNG / JPG",
+      "GIF ↔ MP4"
+    ]
+  },
+  {
+    icon: FileSpreadsheet,
+    title: "📄 Document Conversion",
+    formats: [
+      "PDF ↔ Word (DOCX)",
+      "PDF ↔ Excel (XLSX)",
+      "PDF ↔ JPG / PNG (pages as images)",
+      "DOCX ↔ TXT / ODT",
+      "PowerPoint ↔ PDF"
+    ]
+  },
+  {
+    icon: FileText,
+    title: "📚 E-book Formats",
+    formats: [
+      "EPUB ↔ MOBI / AZW / PDF",
+      "DOCX → EPUB",
+      "PDF → EPUB"
+    ]
+  },
+  {
+    icon: Archive,
+    title: "🗜️ Compression / Archive Files",
+    formats: [
+      "ZIP ↔ RAR / 7Z / TAR",
+      "Remove ZIP password (if legal)",
+      "ISO ↔ ZIP"
+    ]
+  },
+  {
+    icon: Code,
+    title: "💻 Advanced Files",
+    formats: [
+      "JSON ↔ CSV",
+      "CSV ↔ Excel",
+      "Markdown ↔ HTML / PDF",
+      "XML ↔ JSON",
+      "Base64 encode/decode"
+    ]
+  }
+];
+
 const benefits = [
   {
     icon: Zap,
@@ -97,6 +170,8 @@ export default function Home() {
               <span className="text-2xl font-bold text-primary">FlowHub</span>
             </div>
             <div className="flex items-center space-x-4">
+              <LanguageSelector />
+              <ThemeToggle />
               <Link href="/login">
                 <Button variant="ghost">Sign In</Button>
               </Link>
@@ -214,6 +289,53 @@ export default function Home() {
           </motion.div>
         </section>
 
+        {/* File Converters Section */}
+        <section className="container mx-auto px-4 py-20">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Comprehensive File Conversion Tools
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Convert between dozens of file formats with ease. From audio and video to documents and archives, we've got you covered.
+            </p>
+          </motion.div>
+
+          <motion.div 
+            className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
+            {fileConverters.map((converter, index) => (
+              <motion.div key={index} variants={fadeInUp}>
+                <Card className="h-full hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/20">
+                  <CardHeader className="pb-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mb-3">
+                      <converter.icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <CardTitle className="text-lg">{converter.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <ul className="space-y-2">
+                      {converter.formats.map((format, formatIndex) => (
+                        <li key={formatIndex} className="text-sm text-muted-foreground flex items-start">
+                          <span className="w-1.5 h-1.5 bg-primary rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                          {format}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        </section>
+
         {/* Benefits Section */}
         <section className="bg-accent/30 py-20">
           <div className="container mx-auto px-4">
@@ -280,16 +402,28 @@ export default function Home() {
         {/* Footer */}
         <footer className="border-t bg-background/80 backdrop-blur-sm">
           <div className="container mx-auto px-4 py-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center space-x-2">
                 <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
                   <Zap className="w-4 h-4 text-primary-foreground" />
                 </div>
                 <span className="text-lg font-bold text-primary">FlowHub</span>
               </div>
-              <p className="text-muted-foreground">
-                © 2024 FlowHub. All rights reserved.
-              </p>
+              <div className="flex flex-col sm:flex-row items-center gap-2 text-muted-foreground text-sm">
+                <p>© 2025 FlowHub All rights reserved.</p>
+                <span className="hidden sm:inline">•</span>
+                <p>
+                  Powered by{" "}
+                  <a 
+                    href="https://sarkozilenard.hu" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:text-primary/80 transition-colors font-medium"
+                  >
+                    Lenard Sarkozi
+                  </a>
+                </p>
+              </div>
             </div>
           </div>
         </footer>
