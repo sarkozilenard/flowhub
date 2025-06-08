@@ -165,6 +165,7 @@ model QRCode {
   backgroundColor String @default("#FFFFFF")
   size        Int      @default(200)
   format      String   @default("PNG") // PNG, SVG
+  qrCodeData  String?  // Base64 encoded QR code image data
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
